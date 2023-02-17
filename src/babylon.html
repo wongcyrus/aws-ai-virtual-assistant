@@ -1,0 +1,183 @@
+<!--
+  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  SPDX-License-Identifier: MIT-0
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Babylon.js Host Test</title>
+  <style>
+    html,
+    body {
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border-color: black;
+    }
+
+    .tab {
+      background-color: rgb(219, 219, 219);
+      padding-bottom: 0px;
+      margin-bottom: -1px;
+      border-width: 1px;
+      border-style: solid;
+      z-index: 2;
+      position: relative;
+      outline: 0px;
+    }
+
+    .current {
+      background-color: white;
+      border-bottom-color: white;
+      font-weight: bold;
+    }
+
+    .textEntry {
+      min-width: 305px;
+      min-height: 200px;
+      outline: 0px;
+      padding: 10px;
+      resize: both;
+    }
+
+    .speechButton {
+      width: 78.75px;
+    }
+
+    .gestureButton {
+      width: 327px;
+      outline: 0px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #renderCanvas {
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #textToSpeech {
+      padding: 2.5px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: none;
+    }
+
+    #loadScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background-image: url('assets/images/load_screen.png');
+      background-color: gray;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+      background-size: contain;
+      z-index: 9999;
+    }
+
+    #loader {
+      border: 16px solid #3498db38;
+      border-radius: 50%;
+      border-top: 16px solid #3498db;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite;
+      animation: spin 2s linear infinite;
+      position: fixed;
+    }
+
+    @-webkit-keyframes spin {
+      0% {
+        -webkit-transform: rotate(0deg);
+      }
+
+      100% {
+        -webkit-transform: rotate(360deg);
+      }
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+
+  <!--Text to speech dependency-->
+  <script type="text/javascript" src="https://sdk.amazonaws.com/js/aws-sdk-2.645.0.min.js"></script>
+  <!--Babylon.js dependencies-->
+  <script src="https://cdn.jsdelivr.net/npm/babylonjs@4.2.1/babylon.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@4.2.1/babylonjs.loaders.min.js"></script>
+  <!--Host build file-->
+  <script type="text/javascript" src="js/host.babylon.js"></script>
+  <script type="text/javascript" src="js/main.js"></script>
+</head>
+
+<body>
+  <!--Loading screen-->
+  <div id="loadScreen">
+    <div id="loader"></div>
+  </div>
+
+  <!--Text to speech controls-->
+  <div id="textToSpeech">
+    <button class="tab current" onclick="toggleHost(event)">Grace</button>
+    <button class="tab" onclick="toggleHost(event)">Alien</button>
+    <div>
+      <textarea autofocus size="23" type="text" class="textEntry Grace">
+    <speak>
+      <amazon:domain name="conversational">
+        Hello, my name is Grace. I used to only be a host inside Amazon Sumerian, but
+        now you can use me in other Javascript runtime environments like three js
+        and Babylon js. Right now,
+        <mark name='{"feature":"PointOfInterestFeature","method":"setTargetByName","args":["char:gaze"]}' />
+        my friend and I here are in Babylon js.
+      </amazon:domain>
+    </speak>
+            </textarea>
+      <textarea autofocus size="23" type="text" class="textEntry Alien">
+    <speak>
+        Hi there! As you can see I'm set up to be a host too, although I don't use
+        the same type of skeleton as any of the original Amazon Sumerian hosts. With
+        open source hosts, you can apply host functionality to any custom animated
+        character you'd like. I'm excited to see what kinds of interesting host
+        characters you'll bring to life!
+    </speak>
+            </textarea>
+    </div>
+    <div>
+      <button id="play" class="speechButton">Play</button>
+      <button id="pause" class="speechButton">Pause</button>
+      <button id="resume" class="speechButton">Resume</button>
+      <button id="stop" class="speechButton">Stop</button>
+    </div>
+    <div>
+      <button id="gestures" class="gestureButton">Generate Gestures</button>
+    </div>
+    <div>
+      <select id="emotes" class="gestureButton"></select>
+    </div>
+    <div>
+      <button id="playEmote" class="gestureButton">Play Emote</button>
+    </div>
+  </div>
+
+
+</body>
+
+</html>
