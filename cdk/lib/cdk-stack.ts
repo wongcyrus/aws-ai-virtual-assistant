@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { ChatApiConstruct } from './components/chat-api';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class CdkStack extends cdk.Stack {
@@ -12,5 +13,7 @@ export class CdkStack extends cdk.Stack {
     // const queue = new sqs.Queue(this, 'CdkQueue', {
     //   visibilityTimeout: cdk.Duration.seconds(300)
     // });
+
+    const ahatApiStack = new ChatApiConstruct(this,"ChatApiStack",{});
   }
 }

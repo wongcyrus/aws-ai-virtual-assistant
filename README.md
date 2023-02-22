@@ -15,3 +15,9 @@ dskwrk.vscode-generate-getter-setter
 ms-vscode.vscode-typescript-next
 esbenp.prettier-vscode
 
+
+deployment 
+```
+cdk deploy --require-approval never
+```
+
