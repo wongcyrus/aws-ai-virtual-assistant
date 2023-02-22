@@ -25,11 +25,15 @@ export class ChatApiConstruct extends Construct {
       entry: path.join(__dirname, "/../../src/lambda/chat/index.js"),
       handler: "handler",
       timeout: timeout,
+      environment:{
+        basePath: process.env.OPENAI_BASE_PATH!,
+        apikey:process.env.OPENAI_APIKEY!,
+      },
+      depsLockFilePath:path.join(__dirname, "/../../src/lambda/chat/package-lock.json"),
       bundling: {
         externalModules: [
-          'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime
-          'openai'
-        ],
+          'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime          
+        ]
       },
     });
 

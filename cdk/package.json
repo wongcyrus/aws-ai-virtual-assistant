@@ -28,6 +28,7 @@
     "@aws-cdk/aws-lambda-nodejs": "^1.194.0",
     "aws-cdk-lib": "2.66.0",
     "constructs": "^10.0.0",
+    "dotenv": "^16.0.3",
     "source-map-support": "^0.5.21"
   }
 }
