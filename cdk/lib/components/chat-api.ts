@@ -28,6 +28,7 @@ export class ChatApiConstruct extends Construct {
       environment:{
         basePath: process.env.OPENAI_BASE_PATH!,
         apikey:process.env.OPENAI_APIKEY!,
+        maxTokens: process.env.MAX_TOKENS!,
       },
       depsLockFilePath:path.join(__dirname, "/../../src/lambda/chat/package-lock.json"),
       bundling: {
