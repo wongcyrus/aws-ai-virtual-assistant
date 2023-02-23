@@ -25,6 +25,9 @@ export async function handler(event) {
   console.log(completion.data.choices[0].text);
 
   return {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
     body: JSON.stringify({ message: completion.data.choices[0].text }),
     statusCode: 200,
   };

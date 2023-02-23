@@ -7,7 +7,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Babylon.js Host Test</title>
+  <title>AWS AI Virtual Assistant</title>
   <style>
     html,
     body {
@@ -125,6 +125,7 @@
   <!--Babylon.js dependencies-->
   <script src="https://cdn.jsdelivr.net/npm/babylonjs@4.2.1/babylon.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@4.2.1/babylonjs.loaders.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
   <!--Host build file-->
   <script type="text/javascript" src="src/host.babylon.js"></script>
 
@@ -183,6 +184,19 @@
 
   <script>
 
+    function getUrlVars()
+    {
+        var vars = [], hash;
+        var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+        for(var i = 0; i < hashes.length; i++)
+        {
+            hash = hashes[i].split('=');
+            vars.push(hash[0]);
+            vars[hash[0]] = hash[1];
+        }
+        return vars;
+    }
+
     const speakers = new Map([
       ['Grace', undefined],
       ['Alien', undefined],
@@ -190,10 +204,21 @@
     
     async function main() {
         // Initialize AWS and create Polly service objects
-        window.AWS.config.region = awsmobile["aws_project_region"];
-        window.AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-            IdentityPoolId: awsmobile["aws_cognito_identity_pool_id"],
+        window.AWS.config.region = "us-east-1";
+
+        const urlParams = getUrlVars();
+        const apikey = urlParams['apikey'];
+        const endpoint = urlParams['endpoint'];
+
+        let sessionCredentials = await $.ajax( { url : endpoint + 'session-token',
+            contentType : 'application/json',
+            dataType : 'json',
+            headers: {                
+                "X-Api-Key":apikey
+            }
         });
+
+        window.AWS.config.credentials = new AWS.Credentials(sessionCredentials["AccessKeyId"], sessionCredentials["SecretAccessKey"], sessionCredentials["SessionToken"]);
         
     
         const polly = new AWS.Polly();

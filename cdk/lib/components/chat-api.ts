@@ -71,8 +71,8 @@ export class ChatApiConstruct extends Construct {
     const aiVirtualAssistantApi = new RestApi(this, 'aiVirtualAssistantApi',
       {
         defaultCorsPreflightOptions: {
-          allowOrigins: Cors.ALL_ORIGINS
-        }
+            allowOrigins: Cors.ALL_ORIGINS,           
+        },
       });
 
     const azureOpenAiLambdaIntegration = new LambdaIntegration(azureOpenAiFunction);

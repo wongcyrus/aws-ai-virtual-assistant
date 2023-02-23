@@ -24,12 +24,18 @@ export async function handler(event) {
     const response = await client.send(command);
     console.log(response);
     return {
-      body: JSON.stringify(response),
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify(response.Credentials),
       statusCode: 200,
     };
   } catch (err) {
     console.error(err);
     return {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+      },
       body: JSON.stringify(err),
       statusCode: 200,
     };
