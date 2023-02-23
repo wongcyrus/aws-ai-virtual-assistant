@@ -186,6 +186,10 @@
             ['Alien', undefined],
         ]);
 
+        const conversations = new Map();
+        conversations.set('Grace', []);
+        conversations.set('Alien', []);
+
         async function main() {
             // Initialize AWS and create Polly service objects
             window.AWS.config.region = "us-east-1";
@@ -935,6 +939,9 @@
                 const apikey = urlParams['apikey'];
                 const endpoint = urlParams['endpoint'];
 
+                const messages = conversations.get(name);
+                messages.push(speechInput.value);
+                conversations.set(name, messages);
                 $.ajax({
                     url: endpoint + 'azure-open-ai',
                     contentType: 'application/json',
@@ -943,7 +950,7 @@
                         "X-Api-Key": apikey
                     },
                     data: {
-                        "ask": speechInput.value
+                        "ask": messages.join("\n\n")
                     },
                 }).then(answer => {
                     const speechAnswer = document.getElementsByClassName(
@@ -955,6 +962,10 @@
                         gestureArray
                     );
                     host.TextToSpeechFeature["play"](speechAnswer.value);
+
+                    const messages = conversations.get(name);
+                    messages.push(answer);
+                    conversations.set(name, messages);
                 });
 
             };

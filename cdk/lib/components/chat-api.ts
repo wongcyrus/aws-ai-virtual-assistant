@@ -6,7 +6,7 @@ import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import path = require("path");
-import { Cors, Deployment, LambdaIntegration, LambdaRestApi, Period, RestApi, Stage } from "aws-cdk-lib/aws-apigateway";
+import { Cors, LambdaIntegration, Period, RestApi } from "aws-cdk-lib/aws-apigateway";
 
 export interface ChatApiStackProps {
 
