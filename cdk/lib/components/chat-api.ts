@@ -8,6 +8,7 @@ import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-al
 
 import { CfnOutput, Duration } from "aws-cdk-lib";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import path = require("path");
 
@@ -25,12 +26,12 @@ export class ChatApiConstruct extends Construct {
       entry: path.join(__dirname, "/../../src/lambda/azure-open-ai/index.js"),
       handler: "handler",
       timeout: timeout,
-      environment:{
+      environment: {
         basePath: process.env.OPENAI_BASE_PATH!,
-        apikey:process.env.OPENAI_APIKEY!,
+        apikey: process.env.OPENAI_APIKEY!,
         maxTokens: process.env.MAX_TOKENS!,
       },
-      depsLockFilePath:path.join(__dirname, "/../../src/lambda/azure-open-ai/package-lock.json"),
+      depsLockFilePath: path.join(__dirname, "/../../src/lambda/azure-open-ai/package-lock.json"),
       bundling: {
         externalModules: [
           'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime          
@@ -38,22 +39,38 @@ export class ChatApiConstruct extends Construct {
       },
     });
 
+    ;
+
     const sessionTokenFunction = new NodejsFunction(this, "sessionTokenFunction", {
       entry: path.join(__dirname, "/../../src/lambda/session-token/index.js"),
       handler: "handler",
       timeout: timeout,
-      environment:{
-        basePath: process.env.OPENAI_BASE_PATH!,
-        apikey:process.env.OPENAI_APIKEY!,
-        maxTokens: process.env.MAX_TOKENS!,
-      },
-      depsLockFilePath:path.join(__dirname, "/../../src/lambda/session-token/package-lock.json"),
+      depsLockFilePath: path.join(__dirname, "/../../src/lambda/session-token/package-lock.json"),
       bundling: {
         externalModules: [
           'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime          
         ]
       },
     });
+
+    const pollyRole = new iam.Role(this, 'pollyRole', {
+      assumedBy: sessionTokenFunction.grantPrincipal,
+      description: 'An IAM role for Amazon Polly',
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          'AmazonPollyReadOnlyAccess',
+        ),
+      ],
+    });
+
+    sessionTokenFunction.role!.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        resources: [pollyRole.roleArn],
+        actions: ['sts:AssumeRole'],
+      })
+    );
+
+    sessionTokenFunction.addEnvironment("pollyRole", pollyRole.roleArn);
 
 
     // 👇 create our HTTP Api
@@ -82,7 +99,7 @@ export class ChatApiConstruct extends Construct {
     const azureOpenAiIntegration = new HttpLambdaIntegration('azureOpenAiIntegration', azureOpenAiFunction);
     httpApi.addRoutes({
       path: '/azureOpenAi',
-      methods: [HttpMethod.GET,HttpMethod.POST],
+      methods: [HttpMethod.GET, HttpMethod.POST],
       integration: azureOpenAiIntegration,
     });
 
@@ -95,7 +112,7 @@ export class ChatApiConstruct extends Construct {
 
     new CfnOutput(this, 'HttpEndpoint', {
       value: httpApi.url!,
-      description: 'Http Api',     
+      description: 'Http Api',
     });
   }
 }
