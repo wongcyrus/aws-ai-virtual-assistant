@@ -21,8 +21,8 @@ export class ChatApiConstruct extends Construct {
     super(scope, id);
 
     const timeout = Duration.seconds(30);
-    const chatFunction = new NodejsFunction(this, "chatFunction", {
-      entry: path.join(__dirname, "/../../src/lambda/chat/index.js"),
+    const azureOpenAiFunction = new NodejsFunction(this, "azureOpenAiFunction", {
+      entry: path.join(__dirname, "/../../src/lambda/azure-open-ai/index.js"),
       handler: "handler",
       timeout: timeout,
       environment:{
@@ -30,7 +30,24 @@ export class ChatApiConstruct extends Construct {
         apikey:process.env.OPENAI_APIKEY!,
         maxTokens: process.env.MAX_TOKENS!,
       },
-      depsLockFilePath:path.join(__dirname, "/../../src/lambda/chat/package-lock.json"),
+      depsLockFilePath:path.join(__dirname, "/../../src/lambda/azure-open-ai/package-lock.json"),
+      bundling: {
+        externalModules: [
+          'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime          
+        ]
+      },
+    });
+
+    const sessionTokenFunction = new NodejsFunction(this, "sessionTokenFunction", {
+      entry: path.join(__dirname, "/../../src/lambda/session-token/index.js"),
+      handler: "handler",
+      timeout: timeout,
+      environment:{
+        basePath: process.env.OPENAI_BASE_PATH!,
+        apikey:process.env.OPENAI_APIKEY!,
+        maxTokens: process.env.MAX_TOKENS!,
+      },
+      depsLockFilePath:path.join(__dirname, "/../../src/lambda/session-token/package-lock.json"),
       bundling: {
         externalModules: [
           'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime          
@@ -40,7 +57,7 @@ export class ChatApiConstruct extends Construct {
 
 
     // 👇 create our HTTP Api
-    const httpApi = new HttpApi(this, 'http-api-example', {
+    const httpApi = new HttpApi(this, 'httpApi', {
       description: 'HTTP API example',
       corsPreflight: {
         allowHeaders: [
@@ -62,13 +79,18 @@ export class ChatApiConstruct extends Construct {
       },
     });
 
-
-    const chatIntegration = new HttpLambdaIntegration('chatIntegration', chatFunction);
-
+    const azureOpenAiIntegration = new HttpLambdaIntegration('azureOpenAiIntegration', azureOpenAiFunction);
     httpApi.addRoutes({
-      path: '/chat',
+      path: '/azureOpenAi',
+      methods: [HttpMethod.GET,HttpMethod.POST],
+      integration: azureOpenAiIntegration,
+    });
+
+    const sessionTokenIntegration = new HttpLambdaIntegration('sessionTokenIntegration', sessionTokenFunction);
+    httpApi.addRoutes({
+      path: '/sessionToken',
       methods: [HttpMethod.GET],
-      integration: chatIntegration,
+      integration: sessionTokenIntegration,
     });
 
     new CfnOutput(this, 'HttpEndpoint', {
