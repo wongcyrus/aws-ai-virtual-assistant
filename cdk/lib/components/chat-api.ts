@@ -1,16 +1,12 @@
 
-import {
-  CorsHttpMethod,
-  HttpApi,
-  HttpMethod
-} from '@aws-cdk/aws-apigatewayv2-alpha';
-import { HttpLambdaIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
+
 
 import { CfnOutput, Duration } from "aws-cdk-lib";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import path = require("path");
+import { Cors, Deployment, LambdaIntegration, LambdaRestApi, Period, RestApi, Stage } from "aws-cdk-lib/aws-apigateway";
 
 export interface ChatApiStackProps {
 
@@ -72,46 +68,48 @@ export class ChatApiConstruct extends Construct {
 
     sessionTokenFunction.addEnvironment("pollyRole", pollyRole.roleArn);
 
+    const aiVirtualAssistantApi = new RestApi(this, 'aiVirtualAssistantApi',
+      {
+        defaultCorsPreflightOptions: {
+          allowOrigins: Cors.ALL_ORIGINS
+        }
+      });
 
-    // 👇 create our HTTP Api
-    const httpApi = new HttpApi(this, 'httpApi', {
-      description: 'HTTP API example',
-      corsPreflight: {
-        allowHeaders: [
-          'Content-Type',
-          'X-Amz-Date',
-          'Authorization',
-          'X-Api-Key',
-        ],
-        allowMethods: [
-          CorsHttpMethod.OPTIONS,
-          CorsHttpMethod.GET,
-          CorsHttpMethod.POST,
-          CorsHttpMethod.PUT,
-          CorsHttpMethod.PATCH,
-          CorsHttpMethod.DELETE,
-        ],
-        allowCredentials: false,
-        allowOrigins: ['*'],
+    const azureOpenAiLambdaIntegration = new LambdaIntegration(azureOpenAiFunction);
+    const sessionTokenLambdaIntegration = new LambdaIntegration(sessionTokenFunction);
+
+    const v1 = aiVirtualAssistantApi.root.addResource('v1');
+    const r = v1.addResource('azure-open-ai');
+    r.addMethod('GET', azureOpenAiLambdaIntegration, { apiKeyRequired: true });
+    r.addMethod('POST', azureOpenAiLambdaIntegration, { apiKeyRequired: true });
+    v1.addResource('session-token').addMethod('GET', sessionTokenLambdaIntegration, { apiKeyRequired: true });
+
+    const prod = aiVirtualAssistantApi.deploymentStage;
+
+    const plan = aiVirtualAssistantApi.addUsagePlan('UsagePlan', {
+      name: 'AiVirtualAssistant',
+      description: 'AiVirtualAssistant',
+      throttle: {
+        rateLimit: 10,
+        burstLimit: 2
       },
+      quota: {
+        limit: 100,
+        period: Period.DAY
+      },
+      apiStages: [{ api: aiVirtualAssistantApi, stage: prod }]
     });
 
-    const azureOpenAiIntegration = new HttpLambdaIntegration('azureOpenAiIntegration', azureOpenAiFunction);
-    httpApi.addRoutes({
-      path: '/azureOpenAi',
-      methods: [HttpMethod.GET, HttpMethod.POST],
-      integration: azureOpenAiIntegration,
-    });
+    // const normalUserKey = prod.addApiKey('CyrusApiKey', {
+    //   apiKeyName: 'cyrus',
+    //   value: 'dasdasdasdasdasdadad',
+    // });
+    // plan.addApiKey(normalUserKey);
 
-    const sessionTokenIntegration = new HttpLambdaIntegration('sessionTokenIntegration', sessionTokenFunction);
-    httpApi.addRoutes({
-      path: '/sessionToken',
-      methods: [HttpMethod.GET],
-      integration: sessionTokenIntegration,
-    });
+
 
     new CfnOutput(this, 'HttpEndpoint', {
-      value: httpApi.url!,
+      value: aiVirtualAssistantApi.url!,
       description: 'Http Api',
     });
   }

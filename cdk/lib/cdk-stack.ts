@@ -7,13 +7,6 @@ export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'CdkQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
-
-    const ahatApiStack = new ChatApiConstruct(this,"ChatApiStack",{});
+    new ChatApiConstruct(this,"ChatApiConstruct",{});
   }
 }
