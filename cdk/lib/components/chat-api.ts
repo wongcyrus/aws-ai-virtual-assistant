@@ -94,7 +94,7 @@ export class ChatApiConstruct extends Construct {
         burstLimit: 2
       },
       quota: {
-        limit: 100,
+        limit: +process.env.QUOTA!,
         period: Period.DAY
       },
       apiStages: [{ api: aiVirtualAssistantApi, stage: prod }]
