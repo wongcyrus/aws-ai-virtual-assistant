@@ -120,16 +120,13 @@
 
   <!--Text to speech dependency-->
   <script type="text/javascript" src="https://sdk.amazonaws.com/js/aws-sdk-2.645.0.min.js"></script>
- 
-  
+   
   <!--Babylon.js dependencies-->
   <script src="https://cdn.jsdelivr.net/npm/babylonjs@4.2.1/babylon.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@4.2.1/babylonjs.loaders.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
   <!--Host build file-->
   <script type="text/javascript" src="src/host.babylon.js"></script>
-
-  
   
 </head>
 
@@ -145,7 +142,7 @@
     <button class="tab" onclick="toggleHost(event)">Alien</button>
     <div>
       <textarea autofocus size="23" type="text" class="textEntry Grace">
-    <speak>
+    <!-- <speak>
       <amazon:domain name="conversational">
         Hello, my name is Grace. I used to only be a host inside Amazon Sumerian, but
         now you can use me in other Javascript runtime environments like three js
@@ -153,16 +150,16 @@
         <mark name='{"feature":"PointOfInterestFeature","method":"setTargetByName","args":["char:gaze"]}' />
         my friend and I here are in Babylon js.
       </amazon:domain>
-    </speak>
+    </speak> -->
             </textarea>
       <textarea autofocus size="23" type="text" class="textEntry Alien">
-    <speak>
-        Hi there! As you can see I'm set up to be a host too, although I don't use
+    <!-- <speak>
+        <!-- Hi there! As you can see I'm set up to be a host too, although I don't use
         the same type of skeleton as any of the original Amazon Sumerian hosts. With
         open source hosts, you can apply host functionality to any custom animated
         character you'd like. I'm excited to see what kinds of interesting host
-        characters you'll bring to life!
-    </speak>
+        characters you'll bring to life! -->
+    </speak> -->
             </textarea>
     </div>
     <div>
@@ -913,7 +910,23 @@
                 const speechInput = document.getElementsByClassName(
                     `textEntry ${name}`
                 )[0];
-                host.TextToSpeechFeature[id](speechInput.value);
+
+                const urlParams = getUrlVars();
+                const apikey = urlParams['apikey'];
+                const endpoint = urlParams['endpoint'];
+
+                $.ajax( { url : endpoint + 'azure-open-ai',
+                    contentType : 'application/json',
+                    dataType : 'json',
+                    headers: {                
+                        "X-Api-Key":apikey
+                    },
+                    data: { 
+                        "ask": speechInput.value                       
+                    },
+                }).then(answer =>{
+                    host.TextToSpeechFeature[id](answer.message);
+                });                
             };
         });
     
@@ -928,11 +941,29 @@
             const gestureArray = host.GestureFeature.createGenericGestureArray([
                 'Gesture',
             ]);
-            speechInput.value = HOST.aws.TextToSpeechUtils.autoGenerateSSMLMarks(
-                speechInput.value,
-                gestureMap,
-                gestureArray
-            );
+
+            const urlParams = getUrlVars();
+            const apikey = urlParams['apikey'];
+            const endpoint = urlParams['endpoint'];
+
+            $.ajax( { url : endpoint + 'azure-open-ai',
+                contentType : 'application/json',
+                dataType : 'json',
+                headers: {                
+                    "X-Api-Key":apikey
+                },
+                data: { 
+                    "ask": speechInput.value                       
+                },
+            }).then(answer =>{                    
+                speechInput.value = HOST.aws.TextToSpeechUtils.autoGenerateSSMLMarks(
+                    answer.message,
+                    gestureMap,
+                    gestureArray
+                );
+                host.TextToSpeechFeature["play"](speechInput.value);
+            });  
+
         };
     
         // Play emote on demand with emote button
