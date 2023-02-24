@@ -2,6 +2,7 @@ const { Configuration, OpenAIApi } = require("openai");
 
 export async function handler(event) {
 
+  const message = event.httpMethod === "POST" ? event.body : event.queryStringParameters.ask;
 
   const configuration = new Configuration({
     basePath: process.env.basePath,
@@ -9,7 +10,7 @@ export async function handler(event) {
   const openai = new OpenAIApi(configuration);
 
   const completion = await openai.createCompletion({
-    prompt: "##" + event.queryStringParameters.ask,
+    prompt: "##" + message,
     temperature: 0.7,
     max_tokens: parseInt(process.env.maxTokens),
     top_p: 1.0,
