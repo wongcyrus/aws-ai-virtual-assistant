@@ -36,6 +36,12 @@
             font-weight: bold;
         }
 
+        .showSSM {
+            background-color: white;
+            border-bottom-color: white;
+            font-weight: bold;
+        }
+
         .textEntry {
             min-width: 305px;
             min-height: 200px;
@@ -48,7 +54,7 @@
             width: 78.75px;
         }
 
-        .gestureButton {
+        .askButton {
             width: 327px;
             outline: 0px;
         }
@@ -152,7 +158,7 @@
             <button id="stop" class="speechButton">Stop</button>
         </div>
         <div>
-            <button id="gestures" class="gestureButton">Ask</button>
+            <button id="ask" class="askButton">Ask</button>
         </div>
         <div>
             <textarea autofocus size="23" type="text" class="textEntry textAnswer Grace">
@@ -162,13 +168,13 @@
         </div>
         <div>
             <input type="checkbox" id="showSSM" name="showSSM">
-            <label for="showSSM"> Show SSM</label><br>
+            <label for="showSSM" class="showSSM">Show SSM</label><br>
         </div>
         <!-- <div>
-            <select id="emotes" class="gestureButton"></select>
+            <select id="emotes" class="askButton"></select>
         </div>
         <div>
-            <button id="playEmote" class="gestureButton">Play Emote</button>
+            <button id="playEmote" class="askButton">Play Emote</button>
         </div> -->
     </div>
 
@@ -435,6 +441,7 @@
             scene.fogColor.set(0.5, 0.5, 0.5);
             const assetManager = new BABYLON.AssetsManager(scene);
 
+
             // Use our own button to enable audio
             BABYLON.Engine.audioEngine.useCustomUnlockedButton = true;
 
@@ -452,12 +459,12 @@
                 Math.PI / 2,
                 Math.PI / 2,
                 1.4,
-                new BABYLON.Vector3(0, 1.4, 0),
+                new BABYLON.Vector3(0, 2, 0),
                 scene
             );
             camera.minZ = 0.1;
             camera.maxZ = 1000;
-            camera.setPosition(new BABYLON.Vector3(0, 1.4, 3.1));
+            camera.setPosition(new BABYLON.Vector3(0, 3, 3.1));
             camera.setTarget(new BABYLON.Vector3(0, 0.8, 0));
             camera.wheelDeltaPercentage = 0.01;
             camera.attachControl(canvas, true);
@@ -489,6 +496,11 @@
             });
             helper.groundMaterial.primaryColor.set(0.5, 0.5, 0.5);
             helper.ground.receiveShadows = true;
+
+            const groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+            groundMaterial.diffuseTexture = new BABYLON.Texture(
+                "https://d1.awsstatic.com/Developer%20Marketing/developer-center/AWS%20Heroes%20program-ml-hero_logo_dark.8f879fced36fd24a30b5f9dd439bb2eb81b290a6.png", scene, false, false);
+            helper.ground.material = groundMaterial;
 
             return { scene, camera };
         }
@@ -885,8 +897,8 @@
 
 
             // Update the text area text with gesture SSML markup when clicked
-            const gestureButton = document.getElementById('gestures');
-            gestureButton.onclick = () => {
+            const askButton = document.getElementById('ask');
+            askButton.onclick = () => {
                 const { name, host } = getCurrentHost(speakers);
                 const speechInput = document.getElementsByClassName(
                     `textEntry ${name}`
@@ -933,14 +945,6 @@
                 });
 
             };
-
-            // Play emote on demand with emote button
-            // const emoteSelect = document.getElementById('emotes');
-            // const emoteButton = document.getElementById('playEmote');
-            // emoteButton.onclick = () => {
-            //     const { host } = getCurrentHost(speakers);
-            //     host.GestureFeature.playGesture('Emote', emoteSelect.value);
-            // };
 
             // Initialize tab
             const tab = document.getElementsByClassName('tab current')[0];
