@@ -168,7 +168,9 @@
         </div>
         <div>
             <input type="checkbox" id="showSSM" name="showSSM">
-            <label for="showSSM" class="showSSM">Show SSM</label><br>
+            <label for="showSSM" class="showSSM">Show SSM</label>
+            <button id="reset" class="speechButton">Reset</button>
+            <br>
         </div>
         <!-- <div>
             <select id="emotes" class="askButton"></select>
@@ -199,6 +201,13 @@
         const conversations = new Map();
         conversations.set('Grace', []);
         conversations.set('Wes', []);
+
+        $().ready(() => {
+            $('#reset').click(() => {
+                conversations.set('Grace', []);
+                conversations.set('Wes', []);
+            });
+        });
 
         async function main() {
             // Initialize AWS and create Polly service objects
@@ -928,6 +937,12 @@
                     const speechAnswer = document.getElementsByClassName(
                         `textAnswer ${name}`
                     )[0];
+
+                    if (!answer.message) {
+                        speechAnswer.value = "No answer!";
+                        return;
+                    }
+
                     const ssml = HOST.aws.TextToSpeechUtils.autoGenerateSSMLMarks(
                         answer.message,
                         gestureMap,
