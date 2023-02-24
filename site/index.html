@@ -181,6 +181,11 @@
     </div>
 
     <script>
+        const urlParams = getUrlVars();
+        const apikey = urlParams['apikey'];
+        const endpoint = urlParams['endpoint'];
+
+        if (!apikey) alert("Pleaase reload the page with api key!");
 
         function getUrlVars() {
             var vars = [], hash;
@@ -209,16 +214,7 @@
             });
         });
 
-        async function main() {
-            // Initialize AWS and create Polly service objects
-            window.AWS.config.region = "us-east-1";
-
-            const urlParams = getUrlVars();
-            const apikey = urlParams['apikey'];
-            const endpoint = urlParams['endpoint'];
-
-            if (!apikey) alert("Pleaase reload the page with api key!");
-
+        async function getAWsCredentials() {
             let sessionCredentials = await $.ajax({
                 url: endpoint + 'session-token',
                 contentType: 'application/json',
@@ -227,8 +223,14 @@
                     "X-Api-Key": apikey
                 }
             });
-
             window.AWS.config.credentials = new AWS.Credentials(sessionCredentials["AccessKeyId"], sessionCredentials["SecretAccessKey"], sessionCredentials["SessionToken"]);
+            setTimeout(getAWsCredentials, 14 * 60 * 1000);
+        }
+
+        async function main() {
+            // Initialize AWS and create Polly service objects
+            window.AWS.config.region = "us-east-1";
+            await getAWsCredentials();
 
 
             const polly = new AWS.Polly();
