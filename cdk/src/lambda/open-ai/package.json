@@ -1,5 +1,5 @@
 {
-  "name": "azure-openai",
+  "name": "openai",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

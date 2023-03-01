@@ -18,8 +18,8 @@ export class ChatApiConstruct extends Construct {
     super(scope, id);
 
     const timeout = Duration.seconds(30);
-    const azureOpenAiFunction = new NodejsFunction(this, "azureOpenAiFunction", {
-      entry: path.join(__dirname, "/../../src/lambda/azure-open-ai/index.js"),
+    const openAiFunction = new NodejsFunction(this, "openAiFunction", {
+      entry: path.join(__dirname, "/../../src/lambda/open-ai/index.js"),
       handler: "handler",
       timeout: timeout,
       environment: {
@@ -27,7 +27,7 @@ export class ChatApiConstruct extends Construct {
         apikey: process.env.OPENAI_APIKEY!,
         maxTokens: process.env.MAX_TOKENS!,
       },
-      depsLockFilePath: path.join(__dirname, "/../../src/lambda/azure-open-ai/package-lock.json"),
+      depsLockFilePath: path.join(__dirname, "/../../src/lambda/open-ai/package-lock.json"),
       bundling: {
         externalModules: [
           'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime          
@@ -71,11 +71,11 @@ export class ChatApiConstruct extends Construct {
     const aiVirtualAssistantApi = new RestApi(this, 'aiVirtualAssistantApi',
       {
         defaultCorsPreflightOptions: {
-            allowOrigins: Cors.ALL_ORIGINS,           
+          allowOrigins: Cors.ALL_ORIGINS,
         },
       });
 
-    const azureOpenAiLambdaIntegration = new LambdaIntegration(azureOpenAiFunction);
+    const azureOpenAiLambdaIntegration = new LambdaIntegration(openAiFunction);
     const sessionTokenLambdaIntegration = new LambdaIntegration(sessionTokenFunction);
 
     const v1 = aiVirtualAssistantApi.root.addResource('v1');

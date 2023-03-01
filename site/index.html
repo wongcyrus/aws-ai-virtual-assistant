@@ -224,7 +224,6 @@
                 }
             });
             window.AWS.config.credentials = new AWS.Credentials(sessionCredentials["AccessKeyId"], sessionCredentials["SecretAccessKey"], sessionCredentials["SessionToken"]);
-            setTimeout(getAWsCredentials, 14 * 60 * 1000);
         }
 
         async function main() {
