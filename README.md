@@ -15,6 +15,7 @@ dskwrk.vscode-generate-getter-setter
 ms-vscode.vscode-typescript-next
 esbenp.prettier-vscode
 mohd-akram.vscode-html-format
+ms-python.python
 
 
 deployment 

@@ -7,6 +7,9 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import path = require("path");
 import { Cors, LambdaIntegration, Period, RestApi } from "aws-cdk-lib/aws-apigateway";
+import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
+import { Runtime } from "@aws-cdk/aws-lambda";
+import { HuggingFaceSagemakerServerlessInferenceConstruct } from "./HuggingFaceSagemakerServerlessInferenceConstruct";
 
 export interface ChatApiStackProps {
 
@@ -49,6 +52,28 @@ export class ChatApiConstruct extends Construct {
       },
     });
 
+
+    const hfConstruct = new HuggingFaceSagemakerServerlessInferenceConstruct(
+      this,
+      "huggingFaceSagemakerServerlessInferenceConstruct",
+      {
+        hfModelId: "facebook/blenderbot-400M-distill",
+        hfTask: "conversational",
+        memorySizeInMb: 3072,        
+      }
+    );
+    const huggingFaceFunction = new PythonFunction(this, 'huggingFaceFunction', {
+      entry: path.join(__dirname, "/../../src/lambda/huggingface"),
+      runtime: Runtime.PYTHON_3_9, // required
+      memorySize: 512,
+      timeout: Duration.seconds(60),
+      environment: {
+        huggingFaceodelEndpointName: hfConstruct.endpointName,
+      },
+      initialPolicy: [hfConstruct.invokeEndPointPolicyStatement],
+    });
+
+
     const pollyRole = new iam.Role(this, 'pollyRole', {
       assumedBy: sessionTokenFunction.grantPrincipal,
       description: 'An IAM role for Amazon Polly',
@@ -77,12 +102,16 @@ export class ChatApiConstruct extends Construct {
 
     const azureOpenAiLambdaIntegration = new LambdaIntegration(openAiFunction);
     const sessionTokenLambdaIntegration = new LambdaIntegration(sessionTokenFunction);
+    const huggingFaceLambdaIntegration = new LambdaIntegration(huggingFaceFunction);
 
     const v1 = aiVirtualAssistantApi.root.addResource('v1');
-    const r = v1.addResource('azure-open-ai');
-    r.addMethod('GET', azureOpenAiLambdaIntegration, { apiKeyRequired: true });
-    r.addMethod('POST', azureOpenAiLambdaIntegration, { apiKeyRequired: true });
     v1.addResource('session-token').addMethod('GET', sessionTokenLambdaIntegration, { apiKeyRequired: true });
+    const azureResource = v1.addResource('azure-open-ai');
+    azureResource.addMethod('GET', azureOpenAiLambdaIntegration, { apiKeyRequired: true });
+    azureResource.addMethod('POST', azureOpenAiLambdaIntegration, { apiKeyRequired: true });
+    const huggingFaceResource = v1.addResource('huggingFace');
+    huggingFaceResource.addMethod('GET', huggingFaceLambdaIntegration, { apiKeyRequired: true });
+    huggingFaceResource.addMethod('POST', huggingFaceLambdaIntegration, { apiKeyRequired: true });
 
     const prod = aiVirtualAssistantApi.deploymentStage;
 
