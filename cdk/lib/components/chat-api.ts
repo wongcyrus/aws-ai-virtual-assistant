@@ -100,13 +100,21 @@ export class ChatApiConstruct extends Construct {
       apiStages: [{ api: aiVirtualAssistantApi, stage: prod }]
     });
 
-    // const normalUserKey = prod.addApiKey('CyrusApiKey', {
-    //   apiKeyName: 'cyrus',
-    //   value: 'dasdasdasdasdasdadad',
+    // const apiKeyValue = "somethingsecret";
+    // const demoUserKey = prod.addApiKey('DemoApiKey', {
+    //   apiKeyName: 'demo',
+    //   value: apiKeyValue,
     // });
-    // plan.addApiKey(normalUserKey);
+    // plan.addApiKey(demoUserKey);
+    // new CfnOutput(this, 'DemoUserApiKey', {
+    //   value: apiKeyValue,
+    //   description: 'Demo User ApiKey',
+    // });
 
-
+    new CfnOutput(this, 'usagePlanId', {
+      value: plan.usagePlanId!,
+      description: 'Usage plan ID',
+    });
 
     new CfnOutput(this, 'HttpEndpoint', {
       value: aiVirtualAssistantApi.url!,
