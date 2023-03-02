@@ -11,6 +11,7 @@ import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
 import { Runtime } from "@aws-cdk/aws-lambda";
 import { HuggingFaceSagemakerServerlessInferenceConstruct } from "./HuggingFaceSagemakerServerlessInferenceConstruct";
 
+
 export interface ChatApiStackProps {
 
 }
@@ -59,7 +60,7 @@ export class ChatApiConstruct extends Construct {
       {
         hfModelId: "facebook/blenderbot-400M-distill",
         hfTask: "conversational",
-        memorySizeInMb: 3072,        
+        memorySizeInMb: 3072,
       }
     );
     const huggingFaceFunction = new PythonFunction(this, 'huggingFaceFunction', {
@@ -74,24 +75,36 @@ export class ChatApiConstruct extends Construct {
     });
 
 
-    const pollyRole = new iam.Role(this, 'pollyRole', {
+    const aiRole = new iam.Role(this, 'pollyRole', {
       assumedBy: sessionTokenFunction.grantPrincipal,
       description: 'An IAM role for Amazon Polly',
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           'AmazonPollyReadOnlyAccess',
-        ),
+        )
       ],
+      inlinePolicies: {
+        "transcribe": new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              resources: ['*'],
+              actions: ['transcribe:StartStreamTranscriptionWebSocket'],              
+              effect: iam.Effect.ALLOW,
+            }),
+          ],
+        })
+      }
+
     });
 
     sessionTokenFunction.role!.addToPrincipalPolicy(
       new iam.PolicyStatement({
-        resources: [pollyRole.roleArn],
+        resources: [aiRole.roleArn],
         actions: ['sts:AssumeRole'],
       })
     );
 
-    sessionTokenFunction.addEnvironment("pollyRole", pollyRole.roleArn);
+    sessionTokenFunction.addEnvironment("pollyRole", aiRole.roleArn);
 
     const aiVirtualAssistantApi = new RestApi(this, 'aiVirtualAssistantApi',
       {
@@ -108,7 +121,7 @@ export class ChatApiConstruct extends Construct {
     v1.addResource('session-token').addMethod('GET', sessionTokenLambdaIntegration, { apiKeyRequired: true });
     const azureResource = v1.addResource('open-ai');
     azureResource.addMethod('POST', openAiLambdaIntegration, { apiKeyRequired: true });
-    const huggingFaceResource = v1.addResource('huggingFace');   
+    const huggingFaceResource = v1.addResource('huggingFace');
     huggingFaceResource.addMethod('POST', huggingFaceLambdaIntegration, { apiKeyRequired: true });
 
     const prod = aiVirtualAssistantApi.deploymentStage;
@@ -127,16 +140,29 @@ export class ChatApiConstruct extends Construct {
       apiStages: [{ api: aiVirtualAssistantApi, stage: prod }]
     });
 
-    // const apiKeyValue = "somethingsecret";
-    // const demoUserKey = prod.addApiKey('DemoApiKey', {
-    //   apiKeyName: 'demo',
-    //   value: apiKeyValue,
-    // });
-    // plan.addApiKey(demoUserKey);
-    // new CfnOutput(this, 'DemoUserApiKey', {
-    //   value: apiKeyValue,
-    //   description: 'Demo User ApiKey',
-    // });
+    if (process.env.UNLIMIT_KEY) {
+      const unlimitPlan = aiVirtualAssistantApi.addUsagePlan('unlimitUsagePlan', {
+        name: 'AiVirtualAssistantUnlimited',
+        description: 'AiVirtualAssistant',
+        throttle: {
+          rateLimit: 10,
+          burstLimit: 2
+        },
+        apiStages: [{ api: aiVirtualAssistantApi, stage: prod }]
+      });
+
+      const apiKeyValue = process.env.UNLIMIT_KEY!;
+      const demoUserKey = prod.addApiKey('UnlimitApiKey', {
+        apiKeyName: 'unlimited',
+        value: apiKeyValue,
+      });
+      unlimitPlan.addApiKey(demoUserKey);
+      new CfnOutput(this, 'UnlimitUserApiKey', {
+        value: apiKeyValue,
+        description: 'Unlimit User ApiKey',
+      });
+    }
+
 
     new CfnOutput(this, 'usagePlanId', {
       value: plan.usagePlanId!,
