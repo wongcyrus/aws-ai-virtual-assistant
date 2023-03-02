@@ -48,7 +48,7 @@ index.html is the front-end HTML code for a tutorial demonstrating how to stream
                 <option value="zh-CN">Chinese (simplified)</option>
                 <option value="en-AU">English (Australian)</option>
                 <option value="en-GB">English (British)</option>
-                <option value="en-US">English (US)</option>
+                <option value="en-US" selected>English (US)</option>
                 <option value="fr-FR">French</option>
                 <option value="fr-CA">French (Canadian)</option>
                 <option value="de-DE">German</option>
@@ -60,9 +60,6 @@ index.html is the front-end HTML code for a tutorial demonstrating how to stream
             </select>
             <div id="recordButtonContainer">
                 <button id="record" class="recordInactive" onclick="onRecordPress()">◉</button>
-            </div>
-            <div id="outputSection">
-                <div id="transcribedText"></div>
             </div>
         </div>
         <section class="msger">
@@ -76,9 +73,9 @@ index.html is the front-end HTML code for a tutorial demonstrating how to stream
             </header>
             <main class="msger-chat">
             </main>
-            <form class="msger-inputarea">
-                <input type="text" class="msger-input" placeholder="Enter your message...">
-                <button type="submit" class="msger-send-btn">Send</button>
+            <form class="msger-inputarea" id="msgerForm">
+                <input type="text" class="msger-input" id="msgerInput" placeholder="Enter your message...">
+                <button type="submit" class="msger-send-btn" id="sendButton">Send</button>
             </form>
         </section>
         <div class="msger">

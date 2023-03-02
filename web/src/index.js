@@ -17,7 +17,7 @@ import * as TranscribeClient from "./libs/transcribeClient.js";
 
 const recordButton = document.getElementById("record");
 const inputLanguageList = document.getElementById("inputLanguageList");
-const transcribedText = document.getElementById("transcribedText");
+const msgerInput= document.getElementById("msgerInput");
 
 window.onRecordPress = () => {
   if (recordButton.getAttribute("class") === "recordInactive") {
@@ -27,8 +27,7 @@ window.onRecordPress = () => {
   }
 };
 
-const startRecording = async () => {
-  window.clearTranscription();
+const startRecording = async () => {  
   const selectedLanguage = inputLanguageList.value;
   if (selectedLanguage === "nan") {
     alert("Please select a language");
@@ -44,16 +43,29 @@ const startRecording = async () => {
   }
 };
 
-const onTranscriptionDataReceived = (data) => {
-  transcribedText.insertAdjacentHTML("beforeend", data); 
+const debounce = (func, timeout = 1000)=>{
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  };
+}
+
+let bufffer = "";
+const processChange = debounce(() => {
+  console.log("Send:"+bufffer);
+  msgerInput.value = bufffer;
+  bufffer="";
+  $("#sendButton").click();
+});
+
+const onTranscriptionDataReceived = (data) => {  
+  bufffer += data;
+  processChange(); 
 }
 
 const stopRecording = function () {
   inputLanguageList.disabled = false;
   recordButton.setAttribute("class", "recordInactive");
   TranscribeClient.stopRecording();
-};
-
-window.clearTranscription = () => {
-  transcribedText.innerHTML = "";
 };
