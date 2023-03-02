@@ -25,12 +25,6 @@ body {
     font-weight: bold;
 }
 
-.panel {
-    background-color: white;
-    border-bottom-color: white;
-    font-weight: bold;
-}
-
 .textEntry {
     min-width: 305px;
     min-height: 200px;
@@ -39,14 +33,7 @@ body {
     resize: both;
 }
 
-.speechButton {
-    width: 78.75px;
-}
 
-.askButton {
-    width: 327px;
-    outline: 0px;
-}
 
 .hidden {
     display: none;
@@ -169,6 +156,7 @@ html {
     overflow-y: auto;
     padding: 10px;
     max-height: 400px;
+    min-height: 400px;
 }
 
 .msger-chat::-webkit-scrollbar {

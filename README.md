@@ -24,6 +24,10 @@ cdk deploy --require-approval never
 ```
 
 
+For web development
+```
+cd site/
 python3 -m http.server 8080
+```
 
 
