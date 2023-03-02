@@ -1,7 +1,12 @@
 const { Configuration, OpenAIApi } = require("openai");
 
+const stop = "\n\n\n\n\n";
+
 export async function handler(event) {
-  const message = event.httpMethod === "POST" ? event.body : event.queryStringParameters.ask;
+  const conversation = JSON.parse(event.body);
+  const combiner = (a, b) => a.map((k, i) => k + stop + b[i] + stop);
+  const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + conversation.text;
+    
   let answer = process.env.basePath ? await azureOpenAi(message) : await openAi(message);
   console.log(answer);
   return {
@@ -25,13 +30,14 @@ async function azureOpenAi(message) {
     max_tokens: parseInt(process.env.maxTokens),
     top_p: 1.0,
     frequency_penalty: 0.0,
-    presence_penalty: 0.0
+    presence_penalty: 0.0,
+    stop: stop
   }, {
     headers: {
       'api-key': process.env.apikey,
     },
     params: { "api-version": "2022-12-01" }
-  });  
+  });
   return completion.data.choices[0].text;
 }
 
@@ -48,8 +54,9 @@ async function openAi(message) {
     max_tokens: parseInt(process.env.maxTokens),
     top_p: 1.0,
     frequency_penalty: 0.0,
-    presence_penalty: 0.0
-  });  
+    presence_penalty: 0.0,
+    stop: stop
+  });
   return completion.data.choices[0].text;
 }
 

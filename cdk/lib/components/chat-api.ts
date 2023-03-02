@@ -20,7 +20,7 @@ export class ChatApiConstruct extends Construct {
   constructor(scope: Construct, id: string, props: ChatApiStackProps) {
     super(scope, id);
 
-    const timeout = Duration.seconds(30);
+    const timeout = Duration.seconds(60);
     const openAiFunction = new NodejsFunction(this, "openAiFunction", {
       entry: path.join(__dirname, "/../../src/lambda/open-ai/index.js"),
       handler: "handler",
@@ -100,17 +100,15 @@ export class ChatApiConstruct extends Construct {
         },
       });
 
-    const azureOpenAiLambdaIntegration = new LambdaIntegration(openAiFunction);
+    const openAiLambdaIntegration = new LambdaIntegration(openAiFunction);
     const sessionTokenLambdaIntegration = new LambdaIntegration(sessionTokenFunction);
     const huggingFaceLambdaIntegration = new LambdaIntegration(huggingFaceFunction);
 
     const v1 = aiVirtualAssistantApi.root.addResource('v1');
     v1.addResource('session-token').addMethod('GET', sessionTokenLambdaIntegration, { apiKeyRequired: true });
-    const azureResource = v1.addResource('azure-open-ai');
-    azureResource.addMethod('GET', azureOpenAiLambdaIntegration, { apiKeyRequired: true });
-    azureResource.addMethod('POST', azureOpenAiLambdaIntegration, { apiKeyRequired: true });
-    const huggingFaceResource = v1.addResource('huggingFace');
-    huggingFaceResource.addMethod('GET', huggingFaceLambdaIntegration, { apiKeyRequired: true });
+    const azureResource = v1.addResource('open-ai');
+    azureResource.addMethod('POST', openAiLambdaIntegration, { apiKeyRequired: true });
+    const huggingFaceResource = v1.addResource('huggingFace');   
     huggingFaceResource.addMethod('POST', huggingFaceLambdaIntegration, { apiKeyRequired: true });
 
     const prod = aiVirtualAssistantApi.deploymentStage;

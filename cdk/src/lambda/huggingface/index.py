@@ -14,8 +14,8 @@ def inference(body):
         endpoint_name=os.environ['huggingFaceodelEndpointName'], sagemaker_session=sess)
     data = {
         'inputs': {
-            "past_user_inputs": [message["past_user_inputs"]],
-            "generated_responses": [message["generated_responses"]],
+            "past_user_inputs": message["past_user_inputs"],
+            "generated_responses": message["generated_responses"],
             "text": message["text"]
         }
     }
@@ -25,7 +25,7 @@ def inference(body):
 
 
 def handler(event, context):
-    body = event["body"] if event.httpMethod == "POST" else event["queryStringParameters"]["ask"]
+    body = event["body"] if event["httpMethod"] == "POST" else event["queryStringParameters"]["ask"]
 
     reply = inference(body)
     return {

@@ -167,10 +167,17 @@
             </textarea>
         </div>
         <div>
-            <input type="checkbox" id="showSSM" name="showSSM">
             <label for="showSSM" class="showSSM">Show SSM</label>
+            <input type="checkbox" id="showSSM" name="showSSM">
+            <br />
+            <label for="cars" class="showSSM">Choose a model:</label>
+            <select name="models" id="models">
+                <option value="open-ai" selected>OpenAI (text-davinci-003)</option>
+                <option value="huggingFace">HuggingFace (blenderbot-400M-distill)</option>
+            </select>
+            <br />
             <button id="reset" class="speechButton">Reset</button>
-            <br>
+
         </div>
         <!-- <div>
             <select id="emotes" class="askButton"></select>
@@ -204,13 +211,13 @@
         ]);
 
         const conversations = new Map();
-        conversations.set('Grace', []);
-        conversations.set('Wes', []);
+        conversations.set('Grace', { "past_user_inputs": [], "generated_responses": [] });
+        conversations.set('Wes', { "past_user_inputs": [], "generated_responses": [] });
 
         $().ready(() => {
             $('#reset').click(() => {
-                conversations.set('Grace', []);
-                conversations.set('Wes', []);
+                conversations.set('Grace', { "past_user_inputs": [], "generated_responses": [] });
+                conversations.set('Wes', { "past_user_inputs": [], "generated_responses": [] });
             });
         });
 
@@ -923,17 +930,22 @@
                 const endpoint = urlParams['endpoint'];
 
                 const messages = conversations.get(name);
-                messages.push(speechInput.value);
-                conversations.set(name, messages);
+                const data = {
+                    "past_user_inputs": [...messages.past_user_inputs],
+                    "generated_responses": [...messages.generated_responses],
+                    "text": speechInput.value
+                }
+                messages.past_user_inputs.push(speechInput.value);
+
                 $.ajax({
-                    url: endpoint + 'azure-open-ai',
+                    url: endpoint + $("#models").find(':selected').val(),
                     contentType: 'application/json',
                     type: "POST",
                     dataType: 'json',
                     headers: {
                         "X-Api-Key": apikey
                     },
-                    data: messages.join("\n\n")
+                    data: JSON.stringify(data)
                 }).then(answer => {
                     const speechAnswer = document.getElementsByClassName(
                         `textAnswer ${name}`
@@ -955,8 +967,9 @@
 
                     const messages = conversations.get(name);
                     if (answer.message) {
-                        messages.push(answer.message);
-                        conversations.set(name, messages);
+                        messages.generated_responses.push(answer.message);
+                    } else {
+                        messages.generated_responses.push("");
                     }
                 });
 
