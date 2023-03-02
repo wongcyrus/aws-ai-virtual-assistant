@@ -1,0 +1,57 @@
+<!-- Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: Apache-2.0
+ABOUT THIS NODE.JS EXAMPLE: This example works with the AWS SDK for JavaScript version 3 (v3),
+which is available at https://github.com/aws/aws-sdk-js-v3.
+
+Purpose:
+index.html is the front-end HTML code for a tutorial demonstrating how to stream speech using Amazon Transcribe.
+*/
+-->
+
+<!-- snippet-start:[transcribe.HTML.streaming.indexv3] -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Streaming Speech to Text</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="text/javascript" src="./main.js"></script>
+</head>
+
+<body>
+    <div id="mainContainer">
+        <h1>Streaming Speech to Text</h1>
+        <select id="inputLanguageList">
+            <option value="nan">Select the language you are going to speak</option>
+            <option value="zh-CN">Chinese (simplified)</option>
+            <option value="en-AU">English (Australian)</option>
+            <option value="en-GB">English (British)</option>
+            <option value="en-US">English (US)</option>
+            <option value="fr-FR">French</option>
+            <option value="fr-CA">French (Canadian)</option>
+            <option value="de-DE">German</option>
+            <option value="it-IT">Italian</option>
+            <option value="ja-JP">Japanese</option>
+            <option value="ko-KR">Korean</option>
+            <option value="pt-BR">Portugese (Brazilian)</option>
+            <option value="es-US">Spanish (US)</option>
+        </select>
+
+        <div id="recordButtonContainer">
+            <button id="record" class="recordInactive" onclick="onRecordPress()">◉</button>
+        </div>
+
+        <div id="outputSection">
+            <div id="headerText">
+                <h2>Transcription</h2>
+            </div>
+            <div id="transcribedText"></div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="./main.js"></script>
+</body>
+
+</html>
+<!-- snippet-end:[transcribe.HTML.streaming.indexv3] -->
