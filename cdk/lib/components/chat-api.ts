@@ -17,7 +17,8 @@ export interface ChatApiStackProps {
 }
 
 export class ChatApiConstruct extends Construct {
-
+  public readonly endpoint: string;
+  public readonly unlimitedApiKey?: string;
   constructor(scope: Construct, id: string, props: ChatApiStackProps) {
     super(scope, id);
 
@@ -88,7 +89,7 @@ export class ChatApiConstruct extends Construct {
           statements: [
             new iam.PolicyStatement({
               resources: ['*'],
-              actions: ['transcribe:StartStreamTranscriptionWebSocket'],              
+              actions: ['transcribe:StartStreamTranscriptionWebSocket'],
               effect: iam.Effect.ALLOW,
             }),
           ],
@@ -126,6 +127,8 @@ export class ChatApiConstruct extends Construct {
 
     const prod = aiVirtualAssistantApi.deploymentStage;
 
+    this.endpoint = aiVirtualAssistantApi.url + "v1/";
+
     const plan = aiVirtualAssistantApi.addUsagePlan('UsagePlan', {
       name: 'AiVirtualAssistant',
       description: 'AiVirtualAssistant',
@@ -141,7 +144,7 @@ export class ChatApiConstruct extends Construct {
     });
 
     if (process.env.UNLIMIT_KEY) {
-      const unlimitPlan = aiVirtualAssistantApi.addUsagePlan('unlimitUsagePlan', {
+      const unlimitedPlan = aiVirtualAssistantApi.addUsagePlan('unlimitedUsagePlan', {
         name: 'AiVirtualAssistantUnlimited',
         description: 'AiVirtualAssistant',
         throttle: {
@@ -152,15 +155,17 @@ export class ChatApiConstruct extends Construct {
       });
 
       const apiKeyValue = process.env.UNLIMIT_KEY!;
-      const demoUserKey = prod.addApiKey('UnlimitApiKey', {
-        apiKeyName: 'unlimited',
+      const demoUserKey = prod.addApiKey('unlimitedApiKey', {
+        apiKeyName: 'AiVirtualAssistantUnlimited',
         value: apiKeyValue,
       });
-      unlimitPlan.addApiKey(demoUserKey);
-      new CfnOutput(this, 'UnlimitUserApiKey', {
+      unlimitedPlan.addApiKey(demoUserKey);
+      new CfnOutput(this, 'UnlimitedUserApiKey', {
         value: apiKeyValue,
         description: 'Unlimit User ApiKey',
       });
+
+      this.unlimitedApiKey = apiKeyValue;
     }
 
 

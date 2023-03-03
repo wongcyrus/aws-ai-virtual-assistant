@@ -6,7 +6,6 @@ import { CfnOutput, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import path = require('path');
-import { CfnFunction } from 'aws-cdk-lib/aws-lambda';
 
 export interface StaticSiteProps {
 
@@ -19,17 +18,18 @@ export interface StaticSiteProps {
  * Route53 alias record, and ACM certificate.
  */
 export class StaticSite extends Construct {
+  public readonly siteUrl: string;
   constructor(parent: Stack, name: string, props: StaticSiteProps) {
     super(parent, name);
 
-   
+
     const cloudfrontOAI = new cloudfront.OriginAccessIdentity(this, 'cloudfront-OAI', {
       comment: `OAI for ${name}`
     });
-  
+
 
     // Content bucket
-    const siteBucket = new s3.Bucket(this, 'SiteBucket', {      
+    const siteBucket = new s3.Bucket(this, 'SiteBucket', {
       publicReadAccess: false,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
 
@@ -55,12 +55,12 @@ export class StaticSite extends Construct {
     }));
     new CfnOutput(this, 'Bucket', { value: siteBucket.bucketName });
 
-   
+
     // CloudFront distribution
-    const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {    
-      defaultRootObject: "index.html",      
+    const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {
+      defaultRootObject: "index.html",
       minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-      errorResponses:[
+      errorResponses: [
         {
           httpStatus: 403,
           responseHttpStatus: 403,
@@ -69,14 +69,19 @@ export class StaticSite extends Construct {
         }
       ],
       defaultBehavior: {
-        origin: new cloudfront_origins.S3Origin(siteBucket, {originAccessIdentity: cloudfrontOAI}),
+        origin: new cloudfront_origins.S3Origin(siteBucket, { originAccessIdentity: cloudfrontOAI }),
         compress: true,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       }
     });
 
-    new CfnOutput(this, 'SiteUrl', { value: distribution.domainName });
+    new CfnOutput(this, 'SiteUrl', {
+      value: distribution.domainName,
+      description: "Site Url"
+    });
+
+    this.siteUrl = "https://" + distribution.domainName;
 
     // Deploy site contents to S3 bucket
     new s3deploy.BucketDeployment(this, 'DeployWithInvalidation', {
@@ -84,8 +89,8 @@ export class StaticSite extends Construct {
       destinationBucket: siteBucket,
       distribution,
       distributionPaths: ['/*'],
-      memoryLimit:1024
+      memoryLimit: 1024
     });
-    
+
   }
 }
