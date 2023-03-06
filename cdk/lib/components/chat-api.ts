@@ -3,17 +3,18 @@
 
 import { CfnOutput, Duration } from "aws-cdk-lib";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 import path = require("path");
 import { Cors, LambdaIntegration, Period, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
 import { Runtime } from "@aws-cdk/aws-lambda";
-import { HuggingFaceSagemakerServerlessInferenceConstruct } from "./HuggingFaceSagemakerServerlessInferenceConstruct";
+import { HuggingFaceSagemakerServerlessInferenceConstruct } from "./hugging-face-sagemaker-serverless-inference";
+import { Bucket } from "aws-cdk-lib/aws-s3";
+import { Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 
 
 export interface ChatApiStackProps {
-
+  conversationBucket: Bucket;
 }
 
 export class ChatApiConstruct extends Construct {
@@ -31,6 +32,7 @@ export class ChatApiConstruct extends Construct {
         basePath: process.env.OPENAI_BASE_PATH!,
         apikey: process.env.OPENAI_APIKEY!,
         maxTokens: process.env.MAX_TOKENS!,
+        conversationBucket: props.conversationBucket.bucketName,
       },
       depsLockFilePath: path.join(__dirname, "/../../src/lambda/open-ai/package-lock.json"),
       bundling: {
@@ -39,8 +41,8 @@ export class ChatApiConstruct extends Construct {
         ]
       },
     });
+    props.conversationBucket.grantWrite(openAiFunction);
 
-    ;
 
     const sessionTokenFunction = new NodejsFunction(this, "sessionTokenFunction", {
       entry: path.join(__dirname, "/../../src/lambda/session-token/index.js"),
@@ -71,26 +73,28 @@ export class ChatApiConstruct extends Construct {
       timeout: Duration.seconds(60),
       environment: {
         huggingFaceodelEndpointName: hfConstruct.endpointName,
+        conversationBucket: props.conversationBucket.bucketName,
       },
       initialPolicy: [hfConstruct.invokeEndPointPolicyStatement],
     });
+    props.conversationBucket.grantWrite(huggingFaceFunction);
 
 
-    const aiRole = new iam.Role(this, 'pollyRole', {
+    const aiRole = new Role(this, 'pollyRole', {
       assumedBy: sessionTokenFunction.grantPrincipal,
       description: 'An IAM role for Amazon Polly',
       managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
+        ManagedPolicy.fromAwsManagedPolicyName(
           'AmazonPollyReadOnlyAccess',
         )
       ],
       inlinePolicies: {
-        "transcribe": new iam.PolicyDocument({
+        "transcribe": new PolicyDocument({
           statements: [
-            new iam.PolicyStatement({
+            new PolicyStatement({
               resources: ['*'],
               actions: ['transcribe:StartStreamTranscriptionWebSocket'],
-              effect: iam.Effect.ALLOW,
+              effect: Effect.ALLOW,
             }),
           ],
         })
@@ -99,7 +103,7 @@ export class ChatApiConstruct extends Construct {
     });
 
     sessionTokenFunction.role!.addToPrincipalPolicy(
-      new iam.PolicyStatement({
+      new PolicyStatement({
         resources: [aiRole.roleArn],
         actions: ['sts:AssumeRole'],
       })

@@ -1,1 +1,2 @@
 sagemaker
+boto3

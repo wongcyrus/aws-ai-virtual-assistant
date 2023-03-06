@@ -1,14 +1,47 @@
 const { Configuration, OpenAIApi } = require("openai");
+import AWS from 'aws-sdk'
+
+const s3 = new AWS.S3();
 
 const stop = "\n\n\n\n\n";
+
+function padTo2Digits(num) {
+  return num.toString().padStart(2, '0');
+}
+
+function formatDate(date) {
+  return (
+    [
+      date.getFullYear(),
+      padTo2Digits(date.getMonth() + 1),
+      padTo2Digits(date.getDate()),
+    ].join('-') +
+    ' ' +
+    [
+      padTo2Digits(date.getHours()),
+      padTo2Digits(date.getMinutes()),
+      padTo2Digits(date.getSeconds()),
+    ].join(':') + ".000000"
+  );
+}
 
 export async function handler(event) {
   const conversation = JSON.parse(event.body);
   const combiner = (a, b) => a.map((k, i) => k + stop + b[i] + stop);
   const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + conversation.text;
-    
+
   let answer = process.env.basePath ? await azureOpenAi(message) : await openAi(message);
   console.log(answer);
+
+  const rightNow = new Date();
+  const dateString = rightNow.toISOString().slice(0, 10);
+  const timeString = padTo2Digits(rightNow.getHours()) + "-" + padTo2Digits(rightNow.getMinutes()) + "-" + padTo2Digits(rightNow.getSeconds());
+  await s3.upload({
+    Bucket: process.env.conversationBucket,
+    Key: `date=${dateString}/apiKeyId=${event.requestContext.identity.apiKeyId}/ip=${event.requestContext.identity.sourceIp}/${timeString}.json`,
+    Body: JSON.stringify({ question: conversation.text, answer: answer, sourceIp: event.requestContext.identity.sourceIp, model: "openai", date: formatDate(rightNow) })
+  }).promise();
+
   return {
     headers: {
       'Access-Control-Allow-Origin': '*',

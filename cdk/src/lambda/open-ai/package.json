@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.1328.0",
     "openai": "^3.2.1"
   }
 }
