@@ -38,8 +38,8 @@ export async function handler(event) {
   const timeString = padTo2Digits(rightNow.getHours()) + "-" + padTo2Digits(rightNow.getMinutes()) + "-" + padTo2Digits(rightNow.getSeconds());
   await s3.upload({
     Bucket: process.env.conversationBucket,
-    Key: `date=${dateString}/apiKeyId=${event.requestContext.identity.apiKeyId}/ip=${event.requestContext.identity.sourceIp}/${timeString}.json`,
-    Body: JSON.stringify({ question: conversation.text, answer: answer, sourceIp: event.requestContext.identity.sourceIp, model: "openai", date: formatDate(rightNow) })
+    Key: `date=${dateString}/apikeyid=${event.requestContext.identity.apiKeyId}/${timeString}.json`,
+    Body: JSON.stringify({ question: conversation.text, answer: answer, sourceIp: event.requestContext.identity.sourceIp, model: "openai", time: formatDate(rightNow) })
   }).promise();
 
   return {

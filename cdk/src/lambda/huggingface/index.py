@@ -43,12 +43,12 @@ def handler(event, context):
     ip_address = event["requestContext"]["identity"]["sourceIp"]
     name = now.strftime('%H-%M-%S')
 
-    key = f'date={date_string}/apiKeyId={api_key}/ip={ip_address}/{name}.json'
+    key = f'date={date_string}/apikeyid={api_key}/{name}.json'
 
     question, answer = inference(body)
 
     data = {"question": question, "answer": answer,
-            "sourceIp": ip_address, "model": "huggingface", "date": now.strftime("%Y-%m-%d %H:%M:%S.%f")}
+            "sourceIp": ip_address, "model": "huggingface", "time": now.strftime("%Y-%m-%d %H:%M:%S.%f")}
     upload_json_to_s3(json.dumps(data), key)
     return {
         "headers": {
