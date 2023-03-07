@@ -11,6 +11,7 @@ from datetime import datetime
 
 sess = sagemaker.Session()
 s3 = boto3.resource('s3')
+sns = boto3.client('sns')
 
 comprehend = boto3.client('comprehend', region_name="us-east-1")
 
@@ -20,10 +21,10 @@ def detect_dominant_language(text):
     return response['Languages'][0]['LanguageCode']
 
 
-def detect_sentiment(text):
+def detect_sentiment(text, languageCode):
     response = comprehend.detect_sentiment(
-        Text=text, LanguageCode=detect_dominant_language(text))
-    return response['Sentiment']
+        Text=text, LanguageCode=languageCode)
+    return response
 
 
 def upload_json_to_s3(json_data, key):
@@ -60,7 +61,8 @@ def handler(event, context):
 
     question, answer = inference(body)
 
-    sentiment = detect_sentiment(question)
+    language = detect_dominant_language(question)
+    sentiment = detect_sentiment(question, language)
 
     data = {"question": question,
             "answer": answer,
@@ -68,9 +70,25 @@ def handler(event, context):
             "model": "huggingface",
             "time": now.strftime("%Y-%m-%d %H:%M:%S"),
             "sentiment": sentiment["Sentiment"],
-            "sentimentScore": sentiment["SentimentScore"]
+            "sentimentScore": sentiment["SentimentScore"],
+            "language": language
             }
     upload_json_to_s3(json.dumps(data), key)
+
+    if sentiment["Sentiment"] == "NEGATIVE" and sentiment["SentimentScore"]["Negative"] > 0.7:
+        sns.publish(
+            TopicArn=os.environ['negativeSentimentTopicArn'],
+            Message=json.dumps({
+                "question": question,
+                "answer": answer,
+                "apiKeyId": ip_address,
+                "model": "huggingface",
+                "time": now.strftime("%Y-%m-%d %H:%M:%S"),
+                "score": sentiment["SentimentScore"]["Negative"]
+            }),
+            Subject='Very Negative Sentiment Detected'
+        )
+
     return {
         "headers": {
             'Access-Control-Allow-Origin': '*',

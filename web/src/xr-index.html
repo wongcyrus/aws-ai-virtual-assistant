@@ -1,0 +1,134 @@
+<!-- Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+SPDX-License-Identifier: Apache-2.0
+ABOUT THIS NODE.JS EXAMPLE: This example works with the AWS SDK for JavaScript version 3 (v3),
+which is available at https://github.com/aws/aws-sdk-js-v3.
+
+Purpose:
+index.html is the front-end HTML code for a tutorial demonstrating how to stream speech using Amazon Transcribe.
+*/
+-->
+
+<!-- snippet-start:[transcribe.HTML.streaming.indexv3] -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>AI Virtual Assistant</title>
+    <!--Text to speech dependency-->
+    <script type="text/javascript" src="https://sdk.amazonaws.com/js/aws-sdk-2.645.0.min.js"></script>
+
+    <!--Babylon.js dependencies-->
+    <script src="https://cdn.jsdelivr.net/npm/babylonjs@4.2.1/babylon.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@4.2.1/babylonjs.loaders.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"
+        integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <!--Host build file-->
+    <script type="text/javascript" src="js/host.babylon.js"></script>
+    <script type="text/javascript" src="js/xr-chatui.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="text/javascript" src="./main.js"></script>
+</head>
+
+<body>
+    <!--Loading screen-->
+    <div id="loadScreen">
+        <div id="loader"></div>
+    </div>
+    <!--Text to speech controls-->
+    <div id="textToSpeech">
+        <section class="msger">
+            <header class="msger-header">
+                <div class="msger-header-title">
+                    <i class="fas fa-comment-alt"></i> Chat
+                </div>
+                <div class="msger-header-options">
+                    <span><i class="fas fa-cog"></i></span>
+                </div>
+            </header>
+            <main class="msger-chat">
+            </main>
+            <form class="msger-inputarea" id="msgerForm">
+                <input type="text" class="msger-input" id="msgerInput" placeholder="Enter your message...">
+                <button type="submit" class="msger-send-btn" id="sendButton">Send</button>
+            </form>
+            <select id="inputLanguageList">
+                <option value="nan">Select the language you are going to speak</option>
+                <option value="af-ZA">Afrikaans</option>
+                <option value="ar-AE">Arabic, Gulf</option>
+                <option value="ar-SA">Arabic, Modern Standard</option>
+                <option value="zh-CN">Chinese, Simplified</option>
+                <option value="zh-TW">Chinese, Traditional</option>
+                <option value="da-DK">Danish</option>
+                <option value="nl-NL">Dutch</option>
+                <option value="en-AU">English, Australian</option>
+                <option value="en-GB">English, British</option>
+                <option value="en-IN">English, Indian</option>
+                <option value="en-IE">English, Irish</option>
+                <option value="en-NZ">English, New Zealand</option>
+                <option value="en-AB">English, Scottish</option>
+                <option value="en-ZA">English, South African</option>
+                <option value="en-US" selected>English, US</option>
+                <option value="en-WL">English, Welsh</option>
+                <option value="fr-FR">French</option>
+                <option value="fr-CA">French, Canadian</option>
+                <option value="fa-IR">Farsi</option>
+                <option value="de-DE">German</option>
+                <option value="de-CH">German, Swiss</option>
+                <option value="he-IL">Hebrew</option>
+                <option value="hi-IN">Hindi, Indian</option>
+                <option value="id-ID">Indonesian</option>
+                <option value="it-IT">Italian</option>
+                <option value="ja-JP">Japanese</option>
+                <option value="ko-KR">Korean</option>
+                <option value="ms-MY">Malay</option>
+                <option value="pt-PT">Portuguese</option>
+                <option value="pt-BR">Portuguese, Brazilian</option>
+                <option value="ru-RU">Russian</option>
+                <option value="es-ES">Spanish</option>
+                <option value="es-US">Spanish, US</option>
+                <option value="sv-SE">Swedish</option>
+                <option value="ta-IN">Tamil</option>
+                <option value="te-IN">Telugu</option>
+                <option value="th-TH">Thai</option>
+                <option value="tr-TR">Turkish</option>
+                <option value="vi-VN">Vietnamese</option>
+            </select>
+            <button id="record" class="recordInactive" onclick="onRecordPress()">Voice ◉</button>
+        </section>
+        <div class="msger">
+            <div style="padding: 10px;">
+                <fieldset>
+                    <legend>Talking to:</legend>
+                    <div>
+                        <input type="radio" id="huey" name="ActiveHost" value="Grace" checked>
+                        <label for="Grace">Grace</label>
+                        <input type="radio" id="dewey" name="ActiveHost" value="Wes">
+                        <label for="Wes">Wes</label>
+                    </div>
+                </fieldset>
+                <br />
+                <div>
+                    <label for="showSSM">Show SSM:</label>
+                    <input type="checkbox" id="showSSM" name="showSSM">
+                </div>
+                <br />
+                <label for="models">Choose a model:</label>
+                <select name="models" id="models">
+                    <option value="open-ai" selected>OpenAI (text-davinci-003)</option>
+                    <option value="huggingFace">HuggingFace (blenderbot-400M-distill)</option>
+                </select>
+                <br />
+                <button id="reset" class="speechButton">Reset Chat</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script type="text/javascript" src="./main.js"></script>
+</body>
+
+</html>
+<!-- snippet-end:[transcribe.HTML.streaming.indexv3] -->

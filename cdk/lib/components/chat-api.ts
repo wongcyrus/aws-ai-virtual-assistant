@@ -11,6 +11,9 @@ import { Runtime } from "@aws-cdk/aws-lambda";
 import { HuggingFaceSagemakerServerlessInferenceConstruct } from "./hugging-face-sagemaker-serverless-inference";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
+import { Topic } from "aws-cdk-lib/aws-sns";
+import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 
 export interface ChatApiStackProps {
@@ -23,16 +26,25 @@ export class ChatApiConstruct extends Construct {
   constructor(scope: Construct, id: string, props: ChatApiStackProps) {
     super(scope, id);
 
-    const timeout = Duration.seconds(60);
+    const problemTopic = new Topic(this, 'problemTopic', {
+      displayName: 'AI Virtual Assistant Problem Topic',
+    });
+
+    if (process.env.PROBLEM_EMAIL) {
+      problemTopic.addSubscription(new EmailSubscription(process.env.PROBLEM_EMAIL));
+    }
+
     const openAiFunction = new NodejsFunction(this, "openAiFunction", {
+      description: "OpenAI Lambda Function",
       entry: path.join(__dirname, "/../../src/lambda/open-ai/index.js"),
       handler: "handler",
-      timeout: timeout,
+      timeout: Duration.seconds(30),
       environment: {
         basePath: process.env.OPENAI_BASE_PATH!,
         apikey: process.env.OPENAI_APIKEY!,
         maxTokens: process.env.MAX_TOKENS!,
         conversationBucket: props.conversationBucket.bucketName,
+        problemTopicArn: problemTopic.topicArn,
       },
       depsLockFilePath: path.join(__dirname, "/../../src/lambda/open-ai/package-lock.json"),
       bundling: {
@@ -40,21 +52,25 @@ export class ChatApiConstruct extends Construct {
           'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime          
         ]
       },
+      logRetention: RetentionDays.ONE_MONTH,
     });
     openAiFunction.role!.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('ComprehendReadOnly'));
     props.conversationBucket.grantWrite(openAiFunction);
+    problemTopic.grantPublish(openAiFunction);
 
 
     const sessionTokenFunction = new NodejsFunction(this, "sessionTokenFunction", {
+      description: "Session Token Lambda Function",
       entry: path.join(__dirname, "/../../src/lambda/session-token/index.js"),
       handler: "handler",
-      timeout: timeout,
+      timeout: Duration.seconds(90),
       depsLockFilePath: path.join(__dirname, "/../../src/lambda/session-token/package-lock.json"),
       bundling: {
         externalModules: [
           'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime          
         ]
       },
+      logRetention: RetentionDays.ONE_MONTH,
     });
 
 
@@ -68,6 +84,7 @@ export class ChatApiConstruct extends Construct {
       }
     );
     const huggingFaceFunction = new PythonFunction(this, 'huggingFaceFunction', {
+      description: "Hugging Face Lambda Function",
       entry: path.join(__dirname, "/../../src/lambda/huggingface"),
       runtime: Runtime.PYTHON_3_9, // required
       memorySize: 512,
@@ -75,12 +92,14 @@ export class ChatApiConstruct extends Construct {
       environment: {
         huggingFaceodelEndpointName: hfConstruct.endpointName,
         conversationBucket: props.conversationBucket.bucketName,
+        problemTopicArn: problemTopic.topicArn,
       },
       initialPolicy: [hfConstruct.invokeEndPointPolicyStatement],
+      logRetention: RetentionDays.ONE_MONTH,
     });
     huggingFaceFunction.role!.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('ComprehendReadOnly'));
-
     props.conversationBucket.grantWrite(huggingFaceFunction);
+    problemTopic.grantPublish(huggingFaceFunction);
 
 
     const aiRole = new Role(this, 'pollyRole', {
