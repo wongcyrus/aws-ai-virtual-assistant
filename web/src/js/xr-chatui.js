@@ -41,7 +41,7 @@ $().ready(() => {
     const BOT_NAME = "BOT";
     const PERSON_NAME = "You";
 
-    function HTMLEncode(str) {       
+    function HTMLEncode(str) {
         return $('<div/>').text(str).html();
     }
 
@@ -63,7 +63,7 @@ $().ready(() => {
         msgerChat.scrollTop += 500;
     }
 
-    function botResponse(message) {     
+    function botResponse(message) {
         appendMessage(BOT_NAME, BOT_IMG, "left", message);
     }
 
@@ -129,7 +129,7 @@ $().ready(() => {
         const voiceEngine = 'neural'; // Neural engine is not available for all voices in all regions: https://docs.aws.amazon.com/polly/latest/dg/NTTS-main.html
 
         // Set up the scene and hosts
-        const { scene, camera } = createScene();
+        const { scene, camera } = await createScene();
         const {
             character: character1,
             clips: clips1,
@@ -300,7 +300,7 @@ $().ready(() => {
     }
 
     // Set up base scene
-    function createScene() {
+    async function createScene() {
         // Canvas
         const canvas = document.createElement('canvas');
         canvas.id = 'renderCanvas';
@@ -372,7 +372,7 @@ $().ready(() => {
         ground.material = groundMaterial;
 
         // Environment
-        var helper = scene.createDefaultEnvironment({
+        var helper = await scene.createDefaultXRExperienceAsync({
             enableGroundShadow: true,
         });
 
