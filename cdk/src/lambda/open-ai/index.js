@@ -2,6 +2,7 @@ const { Configuration, OpenAIApi } = require("openai");
 import AWS from 'aws-sdk'
 
 const s3 = new AWS.S3();
+const comprehend = new AWS.Comprehend();
 
 const stop = "\n\n\n\n\n";
 
@@ -21,17 +22,22 @@ function formatDate(date) {
       padTo2Digits(date.getHours()),
       padTo2Digits(date.getMinutes()),
       padTo2Digits(date.getSeconds()),
-    ].join(':') + ".000000"
+    ].join(':')
   );
 }
 
 export async function handler(event) {
   const conversation = JSON.parse(event.body);
   const combiner = (a, b) => a.map((k, i) => k + stop + b[i] + stop);
-  const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + conversation.text;
+  const question = conversation.text;
+  const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
 
   let answer = process.env.basePath ? await azureOpenAi(message) : await openAi(message);
   console.log(answer);
+
+  const resp = await comprehend.detectDominantLanguage({ Text: question }).promise();
+  const languageCode = resp.Languages[0].LanguageCode;
+  const sentiment = await comprehend.detectSentiment({ Text: question, LanguageCode: languageCode }).promise();
 
   const rightNow = new Date();
   const dateString = rightNow.toISOString().slice(0, 10);
@@ -39,7 +45,16 @@ export async function handler(event) {
   await s3.upload({
     Bucket: process.env.conversationBucket,
     Key: `date=${dateString}/apikeyid=${event.requestContext.identity.apiKeyId}/${timeString}.json`,
-    Body: JSON.stringify({ question: conversation.text, answer: answer, sourceIp: event.requestContext.identity.sourceIp, model: "openai", time: formatDate(rightNow) })
+    Body: JSON.stringify({ 
+      question: question, 
+      answer: answer, 
+      sourceIp: event.requestContext.identity.sourceIp, 
+      model: "openai", 
+      time: formatDate(rightNow),
+      sentiment: sentiment.Sentiment,
+      sentimentScore: sentiment.SentimentScore,
+      language: languageCode
+    })
   }).promise();
 
   return {

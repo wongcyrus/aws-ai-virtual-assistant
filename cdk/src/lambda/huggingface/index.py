@@ -12,6 +12,19 @@ from datetime import datetime
 sess = sagemaker.Session()
 s3 = boto3.resource('s3')
 
+comprehend = boto3.client('comprehend', region_name="us-east-1")
+
+
+def detect_dominant_language(text):
+    response = comprehend.detect_dominant_language(Text=text)
+    return response['Languages'][0]['LanguageCode']
+
+
+def detect_sentiment(text):
+    response = comprehend.detect_sentiment(
+        Text=text, LanguageCode=detect_dominant_language(text))
+    return response['Sentiment']
+
 
 def upload_json_to_s3(json_data, key):
     s3.Bucket(os.environ['conversationBucket']
@@ -47,8 +60,16 @@ def handler(event, context):
 
     question, answer = inference(body)
 
-    data = {"question": question, "answer": answer,
-            "sourceIp": ip_address, "model": "huggingface", "time": now.strftime("%Y-%m-%d %H:%M:%S.%f")}
+    sentiment = detect_sentiment(question)
+
+    data = {"question": question,
+            "answer": answer,
+            "sourceIp": ip_address,
+            "model": "huggingface",
+            "time": now.strftime("%Y-%m-%d %H:%M:%S"),
+            "sentiment": sentiment["Sentiment"],
+            "sentimentScore": sentiment["SentimentScore"]
+            }
     upload_json_to_s3(json.dumps(data), key)
     return {
         "headers": {

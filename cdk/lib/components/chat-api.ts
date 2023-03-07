@@ -41,6 +41,7 @@ export class ChatApiConstruct extends Construct {
         ]
       },
     });
+    openAiFunction.role!.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('ComprehendReadOnly'));
     props.conversationBucket.grantWrite(openAiFunction);
 
 
@@ -77,6 +78,8 @@ export class ChatApiConstruct extends Construct {
       },
       initialPolicy: [hfConstruct.invokeEndPointPolicyStatement],
     });
+    huggingFaceFunction.role!.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('ComprehendReadOnly'));
+
     props.conversationBucket.grantWrite(huggingFaceFunction);
 
 

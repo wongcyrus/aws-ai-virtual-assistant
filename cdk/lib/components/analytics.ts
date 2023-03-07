@@ -43,7 +43,7 @@ export class Analytics extends Construct {
                     'typeOfData': "file",
                 },
                 partitionKeys: [
-                    { name: "date", type: "string" },
+                    { name: "date", type: "date" },
                     { name: "apikeyid", type: "string" }
                 ],
                 storageDescriptor: {
@@ -53,7 +53,10 @@ export class Analytics extends Construct {
                         { name: "answer", type: "string" },
                         { name: "sourceip", type: "string" },
                         { name: "model", type: "string" },
-                        { name: "time", type: "string" }
+                        { name: "time", type: "timestamp" },
+                        { name: "sentiment", type: "string" },
+                        { name: "sentimentscore", type: "struct<positive:double,negative:double,neutral:double,mixed:double>" },
+                        { name: "language", type: "string" },
                     ],
                     compressed: false,
                     inputFormat: "org.apache.hadoop.mapred.TextInputFormat",
