@@ -56,7 +56,7 @@ def handler(event, context):
     ip_address = event["requestContext"]["identity"]["sourceIp"]
     name = now.strftime('%H-%M-%S')
 
-    key = f'date={date_string}/apikeyid={api_key}/{name}.json'
+    key = f'day={date_string}/apikeyid={api_key}/{name}.json'
 
     question, answer = inference(body)
 

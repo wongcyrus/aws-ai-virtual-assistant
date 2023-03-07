@@ -44,7 +44,7 @@ export async function handler(event) {
   const timeString = padTo2Digits(rightNow.getHours()) + "-" + padTo2Digits(rightNow.getMinutes()) + "-" + padTo2Digits(rightNow.getSeconds());
   await s3.upload({
     Bucket: process.env.conversationBucket,
-    Key: `date=${dateString}/apikeyid=${event.requestContext.identity.apiKeyId}/${timeString}.json`,
+    Key: `day=${dateString}/apikeyid=${event.requestContext.identity.apiKeyId}/${timeString}.json`,
     Body: JSON.stringify({ 
       question: question, 
       answer: answer, 

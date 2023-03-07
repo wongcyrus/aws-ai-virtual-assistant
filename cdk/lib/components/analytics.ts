@@ -43,7 +43,7 @@ export class Analytics extends Construct {
                     'typeOfData': "file",
                 },
                 partitionKeys: [
-                    { name: "date", type: "date" },
+                    { name: "day", type: "date" },
                     { name: "apikeyid", type: "string" }
                 ],
                 storageDescriptor: {
