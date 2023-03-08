@@ -5,9 +5,7 @@ The cross-service example demonstrates how to build an app that records and tran
 also demonstrates how to translate the transcription and send it via email to your contacts. The app uses the following
 AWS services:
 - [Amazon Transcribe](https://aws.amazon.com/transcribe/)
-- [Amazon Comprehend](https://aws.amazon.com/comprehend/)
-- [Amazon Translate](https://aws.amazon.com/translate/)
-- [Amazon Simple Email Services (SES)](https://aws.amazon.com/ses/)
+
 
 The JavaScript SDK Transcribe Streaming client encapsulates the API into a JavaScript 
 library that can be run on browsers, Node.js and potentially React Native. By default, 

@@ -55,7 +55,20 @@ export class StaticSite extends Construct {
     }));
     new CfnOutput(this, 'Bucket', { value: siteBucket.bucketName });
 
+    const assetsCachePolicy = new cloudfront.CachePolicy(this, 'assetsCachePolicy', {
+      cachePolicyName: 'assetsCachePolicy',
+      comment: 'Assets Cache Policy',
+      defaultTtl: Duration.days(7),
+      minTtl: Duration.minutes(1),
+      maxTtl: Duration.days(10),
+      cookieBehavior: cloudfront.CacheCookieBehavior.none(),
+      headerBehavior: cloudfront.CacheHeaderBehavior.none(),
+      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+      enableAcceptEncodingGzip: true,
+      enableAcceptEncodingBrotli: true,
+    });
 
+    const bucketOrigin = new cloudfront_origins.S3Origin(siteBucket, { originAccessIdentity: cloudfrontOAI });
     // CloudFront distribution
     const distribution = new cloudfront.Distribution(this, 'SiteDistribution', {
       defaultRootObject: "index.html",
@@ -69,11 +82,18 @@ export class StaticSite extends Construct {
         }
       ],
       defaultBehavior: {
-        origin: new cloudfront_origins.S3Origin(siteBucket, { originAccessIdentity: cloudfrontOAI }),
+        origin: bucketOrigin,
         compress: true,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      }
+      },
+      additionalBehaviors: {
+        '/assets/*': {
+          origin: bucketOrigin,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          cachePolicy: assetsCachePolicy,
+        },
+      },
     });
 
     new CfnOutput(this, 'SiteUrl', {
