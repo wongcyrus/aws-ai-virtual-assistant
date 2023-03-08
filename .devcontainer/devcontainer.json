@@ -4,5 +4,54 @@
     "ghcr.io/devcontainers-contrib/features/amplify-cli:2": {},
     "ghcr.io/devcontainers/features/aws-cli:1": {},
     "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+      },
+      "eslint.validate": ["javascript", "typescript"],
+      "editor.formatOnSave": true,
+      "[javascript]": {
+        "editor.formatOnSave": false
+      },
+      "[typescript]": {
+        "editor.formatOnSave": false
+      },
+      "[markdown]": {
+        "editor.formatOnSave": false
+      },
+      "search.exclude": {
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/dist": true,
+        "**/coverage": true
+      },
+      "typescript.referencesCodeLens.enabled": true,
+      "githubPullRequests.ignoredPullRequestBranches": ["main"],
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        "amazonwebservices.aws-toolkit-vscode",
+        "bysabi.prettier-vscode-standard",
+        "dbaeumer.vscode-eslint",
+        "DSKWRK.vscode-generate-getter-setter",
+        "esbenp.prettier-vscode",
+        "GitHub.codespaces",
+        "GitHub.copilot",
+        "GitHub.github-vscode-theme",
+        "GitHub.vscode-pull-request-github",
+        "mohd-akram.vscode-html-format",
+        "ms-python.pylint",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.vscode-jupyter-slideshow",
+        "ms-vscode.vscode-typescript-next"
+      ]
+    }
   }
 }

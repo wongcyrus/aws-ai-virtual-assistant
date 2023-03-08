@@ -1,33 +1,34 @@
 # ai-virtual-assistant
-AI Chatbot with AWS Amplify Amazon Sumerian Hosts
+AWS AI Assistant is a serverless applications and integrates most of the AWS AI/ML services and Open AI.
 
-Setup
+# Configure
+```
+AZURE_OPENAI_BASE_PATH="https://<XXXX>.openai.azure.com/openai/deployments/"
+OPENAI_APIKEY="API_KEY"
+MAX_TOKENS=500
+QUOTA=100
+UNLIMIT_KEY=
+PROBLEM_EMAIL=
+```
+1. Using Azure OpenAI, you need to provide AZURE_OPENAI_BASE_PATH.
+2. Using standard OpenAI, you need to leave AZURE_OPENAI_BASE_PATH blank.
+3. Need a unlimited key for demo or preview, you need to provide UNLIMIT_KEY.
+4. Provide PROBLEM_EMAIL to get email alert when there is any very negative message from user.
+
+
+# Deployment with CodeSpaces
 
 ```
-npm install -g typescript
-npm install -g prettier
-npm install -g aws-cdk
-```
-
-
-dskwrk.vscode-generate-getter-setter
-ms-vscode.vscode-typescript-next
-esbenp.prettier-vscode
-mohd-akram.vscode-html-format
-ms-python.python
-
-
-# Deployment 
-
-```
-cdk deploy --require-approval never
+./deployment.sh 
 ```
 Note down the output.
+1. AiVirtualAssistantStack.DemoUrl - Link for the chatbot
+2. AiVirtualAssistantStack.ChatApiConstructusagePlanIDXXXX - Usage plan ID with Rate and quota limit, then use https://github.com/wongcyrus/aws-apigateway-api-key-tools to generate API Key and email to your user.
 
 
 # For web development
 
-Build
+Build the site, after modifying JavaScript or CSS.
 ```
 cd web/src/
 npm run build

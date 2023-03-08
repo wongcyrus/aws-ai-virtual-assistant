@@ -30,10 +30,11 @@ function formatDate(date) {
 export async function handler(event) {
   const conversation = JSON.parse(event.body);
   const combiner = (a, b) => a.map((k, i) => k + stop + b[i] + stop);
+  const model = conversation.model;
   const question = conversation.text;
   const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
 
-  let answer = process.env.basePath ? await azureOpenAi(message) : await openAi(message);
+  let answer = process.env.basePath ? await azureOpenAi(message, model) : await openAi(message, model);
   console.log(answer);
 
   const resp = await comprehend.detectDominantLanguage({ Text: question }).promise();
@@ -50,7 +51,7 @@ export async function handler(event) {
       question: question,
       answer: answer,
       sourceIp: event.requestContext.identity.sourceIp,
-      model: "openai",
+      model: "openai," + model,
       time: formatDate(rightNow),
       sentiment: sentiment.Sentiment,
       sentimentScore: sentiment.SentimentScore,
@@ -82,9 +83,9 @@ export async function handler(event) {
   };
 }
 
-async function azureOpenAi(message) {
+async function azureOpenAi(message, model) {
   const configuration = new Configuration({
-    basePath: process.env.basePath,
+    basePath: process.env.basePath + model,
   });
   const openai = new OpenAIApi(configuration);
   try {
@@ -109,7 +110,7 @@ async function azureOpenAi(message) {
   }
 }
 
-async function openAi(message) {
+async function openAi(message, model) {
   const configuration = new Configuration({
     apiKey: process.env.apikey,
   });
@@ -117,7 +118,7 @@ async function openAi(message) {
 
   try {
     const completion = await openai.createCompletion({
-      model: "text-davinci-002",
+      model: model,
       prompt: "##" + message,
       temperature: 0.7,
       max_tokens: parseInt(process.env.maxTokens),

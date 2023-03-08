@@ -41,12 +41,17 @@ $().ready(() => {
     const BOT_NAME = "BOT";
     const PERSON_NAME = "You";
 
-    function HTMLEncode(str) {       
+    function HTMLEncode(str) {
         return $('<div/>').text(str).html();
     }
 
     function appendMessage(name, img, side, text) {
         //   Simple solution for small apps
+        let message = HTMLEncode(text);
+        const displayMode = $("#models").find(':selected').val().split(",")[2];
+        if(side == "left" && displayMode == "code") {            
+            message = `<pre>${HTMLEncode(text)}</pre>`;
+        }
         const msgHTML = `
         <div class="msg ${side}-msg">
           <div class="msg-img" style="background-image: url(${img})"></div>    
@@ -55,7 +60,7 @@ $().ready(() => {
               <div class="msg-info-name">${name}</div>
               <div class="msg-info-time">${formatDate(new Date())}</div>
             </div>    
-            <div class="msg-text">${HTMLEncode(text)}</div>
+            <div class="msg-text">${message}</div>
           </div>
         </div>
       `;
@@ -63,7 +68,7 @@ $().ready(() => {
         msgerChat.scrollTop += 500;
     }
 
-    function botResponse(message) {     
+    function botResponse(message) {
         appendMessage(BOT_NAME, BOT_IMG, "left", message);
     }
 
@@ -129,7 +134,7 @@ $().ready(() => {
         const voiceEngine = 'neural'; // Neural engine is not available for all voices in all regions: https://docs.aws.amazon.com/polly/latest/dg/NTTS-main.html
 
         // Set up the scene and hosts
-        const { scene, camera } = createScene();
+        const { scene, camera } = await createScene();
         const {
             character: character1,
             clips: clips1,
@@ -300,7 +305,7 @@ $().ready(() => {
     }
 
     // Set up base scene
-    function createScene() {
+    async function createScene() {
         // Canvas
         const canvas = document.createElement('canvas');
         canvas.id = 'renderCanvas';
@@ -372,7 +377,7 @@ $().ready(() => {
         ground.material = groundMaterial;
 
         // Environment
-        var helper = scene.createDefaultEnvironment({
+        await scene.createDefaultXRExperienceAsync({
             enableGroundShadow: true,
         });
 
@@ -758,6 +763,7 @@ $().ready(() => {
 
             const messages = conversations.get(name);
             const data = {
+                "model": $("#models").find(':selected').val().split(",")[1],
                 "past_user_inputs": [...messages.past_user_inputs],
                 "generated_responses": [...messages.generated_responses],
                 "text": msgText
@@ -765,7 +771,7 @@ $().ready(() => {
             messages.past_user_inputs.push(msgText);
 
             $.ajax({
-                url: endpoint + $("#models").find(':selected').val(),
+                url: endpoint + $("#models").find(':selected').val().split(",")[0],
                 contentType: 'application/json',
                 type: "POST",
                 dataType: 'json',
