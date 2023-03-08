@@ -40,7 +40,7 @@ export class ChatApiConstruct extends Construct {
       handler: "handler",
       timeout: Duration.seconds(30),
       environment: {
-        basePath: process.env.OPENAI_BASE_PATH!,
+        basePath: process.env.AZURE_OPENAI_BASE_PATH!,
         apikey: process.env.OPENAI_APIKEY!,
         maxTokens: process.env.MAX_TOKENS!,
         conversationBucket: props.conversationBucket.bucketName,

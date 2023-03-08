@@ -10,16 +10,12 @@ npm install -g aws-cdk
 ```
 
 
-dskwrk.vscode-generate-getter-setter
-ms-vscode.vscode-typescript-next
-esbenp.prettier-vscode
-mohd-akram.vscode-html-format
-ms-python.python
-
-
 # Deployment 
 
 ```
+git clone https://github.com/wongcyrus/ai-virtual-assistant
+cd cdk
+npm i
 cdk deploy --require-approval never
 ```
 Note down the output.
