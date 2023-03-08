@@ -47,6 +47,11 @@ $().ready(() => {
 
     function appendMessage(name, img, side, text) {
         //   Simple solution for small apps
+        let message = HTMLEncode(text);
+        const displayMode = $("#models").find(':selected').val().split(",")[2];
+        if(side == "left" && displayMode == "code") {            
+            message = `<pre>${HTMLEncode(text)}</pre>`;
+        }
         const msgHTML = `
         <div class="msg ${side}-msg">
           <div class="msg-img" style="background-image: url(${img})"></div>    
@@ -55,7 +60,7 @@ $().ready(() => {
               <div class="msg-info-name">${name}</div>
               <div class="msg-info-time">${formatDate(new Date())}</div>
             </div>    
-            <div class="msg-text">${HTMLEncode(text)}</div>
+            <div class="msg-text">${message}</div>
           </div>
         </div>
       `;
@@ -129,7 +134,7 @@ $().ready(() => {
         const voiceEngine = 'neural'; // Neural engine is not available for all voices in all regions: https://docs.aws.amazon.com/polly/latest/dg/NTTS-main.html
 
         // Set up the scene and hosts
-        const { scene, camera } = createScene();
+        const { scene, camera } = await createScene();
         const {
             character: character1,
             clips: clips1,
