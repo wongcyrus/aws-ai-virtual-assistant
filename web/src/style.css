@@ -58,7 +58,7 @@ body {
   justify-content: center;
   width: 100%;
   height: 100%;
-  background-image: url("https://d1.awsstatic.com/Developer%20Marketing/developer-center/AWS%20Heroes%20program-ml-hero_logo_dark.8f879fced36fd24a30b5f9dd439bb2eb81b290a6.png");
+  background-image: url("./assets/images/AWSMLHeroes.png");
   background-color: gray;
   background-repeat: no-repeat;
   background-attachment: fixed;
