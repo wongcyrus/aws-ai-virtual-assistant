@@ -373,7 +373,7 @@ $().ready(() => {
         ground.receiveShadows = true;
         const groundMaterial = new BABYLON.StandardMaterial("ground", scene);
         groundMaterial.diffuseTexture = new BABYLON.Texture(
-            "https://d1.awsstatic.com/Developer%20Marketing/developer-center/AWS%20Heroes%20program-ml-hero_logo_dark.8f879fced36fd24a30b5f9dd439bb2eb81b290a6.png", scene, false, false);
+            "assets/images/AWSMLHeroes.png", scene, false, false);
         ground.material = groundMaterial;
 
         // Environment

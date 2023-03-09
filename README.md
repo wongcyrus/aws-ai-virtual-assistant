@@ -1,7 +1,17 @@
-# ai-virtual-assistant
+# AWS AI Virtual Assistant
 AWS AI Assistant is a serverless applications and integrates most of the AWS AI/ML services and Open AI.
 
-# Configure
+# Demo
+
+Voice chat
+
+[![AWS AI Virtual Assistant with OpenAI Hand Free voice chat demo](https://img.youtube.com/vi/aPOCSAD4jKk/0.jpg)](https://www.youtube.com/watch?v=aPOCSAD4jKk)
+
+Voice chat in VR mode
+
+[![AWS AI Virtual Assistant VR mode Voice Chat Demo](https://img.youtube.com/vi/1ZNF-yGsM8g/0.jpg)](https://www.youtube.com/watch?v=1ZNF-yGsM8g)
+
+# Configuration 
 Rename ```.env.template``` to ```.env```
 ```
 AZURE_OPENAI_BASE_PATH="https://<XXXX>.openai.azure.com/openai/deployments/"
