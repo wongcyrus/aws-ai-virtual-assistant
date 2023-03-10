@@ -32,13 +32,29 @@ export async function handler(event) {
   const combiner = (a, b) => a.map((k, i) => k + stop + b[i] + stop);
   const model = conversation.model;
   const question = conversation.text;
-  const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
+  const sourceIp = event.requestContext.identity.sourceIp;
 
-  let answer = process.env.basePath ? await azureOpenAi(message, model) : await openAi(message, model);
+  let answer = "";
+  if (process.env.basePath) {
+    if (model === "gpt-35-tubo") {
+      answer = await azureOpenAiChatGPT(conversation, sourceIp, model);
+    } else {
+      const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
+      answer = await azureOpenAi(message, model);
+    }
+  } else {
+    if (model === "gpt-35-tubo") {
+      answer = await openAiChatGPT(conversation, sourceIp, model);
+    } else {
+      const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
+      answer = await openAi(message, model);
+    }
+  }
   console.log(answer);
 
   const resp = await comprehend.detectDominantLanguage({ Text: question }).promise();
-  const languageCode = resp.Languages[0].LanguageCode;
+  let languageCode = resp.Languages[0].LanguageCode;
+  languageCode = ["ar", "hi", "ko", "zh-TW", "ja", "zh", "de", "pt", "en", "it", "fr", "es"].includes(languageCode) ? languageCode : "en";
   const sentiment = await comprehend.detectSentiment({ Text: question, LanguageCode: languageCode }).promise();
 
   const rightNow = new Date();
@@ -109,6 +125,77 @@ async function azureOpenAi(message, model) {
     return "";
   }
 }
+
+function messageCombiner(a, b) {
+  return a.map((k, i) => ({ sender: k, text: b[i] }));
+}
+
+function createPrompt(system_message, messages) {
+  let prompt = system_message;
+  for (const message of messages) {
+    prompt += `\n<|im_start|>${message.sender}\n${message.text}\n<|im_end|>`;
+  }
+  prompt += "\n<|im_start|>assistant\n";
+  return prompt;
+}
+
+async function azureOpenAiChatGPT(conversation, ip, model) {
+  const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);
+  const systemMessage = "<|im_start|>system\n{'What can I help you?'}\n<|im_end|>"
+  messages.push({ sender: ip, text: conversation.text });
+
+  const configuration = new Configuration({
+    basePath: process.env.basePath + model,
+  });
+  const openai = new OpenAIApi(configuration);
+  try {
+    const completion = await openai.createCompletion({
+      prompt: createPrompt(systemMessage, messages),
+      max_tokens: 800,
+      temperature: 0.7,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+      top_p: 0.95,
+      stop: ["<|im_end|>"]
+    }, {
+      headers: {
+        'api-key': process.env.apikey,
+      },
+      params: { "api-version": "2022-12-01" }
+    });
+    return completion.data.choices[0].text;
+  } catch (e) {
+    console.error(e);
+    return "";
+  }
+}
+
+async function openAiChatGPT(message, model) {
+  const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);
+  const systemMessage = "<|im_start|>system\n{'What can I help you?'}\n<|im_end|>"
+  messages.push({ sender: ip, text: prompt });
+
+  const configuration = new Configuration({
+    apiKey: process.env.apikey,
+  });
+  const openai = new OpenAIApi(configuration);
+  try {
+    const completion = await openai.createCompletion({
+      prompt: createPrompt(systemMessage, messages),
+      max_tokens: 800,
+      temperature: 0.7,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+      top_p: 0.95,
+      stop: ["<|im_end|>"]
+    });
+    return completion.data.choices[0].text;
+  } catch (e) {
+    console.error(e);
+    return "";
+  }
+}
+
 
 async function openAi(message, model) {
   const configuration = new Configuration({
