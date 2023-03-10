@@ -141,7 +141,7 @@ function createPrompt(system_message, messages) {
 
 async function azureOpenAiChatGPT(conversation, ip, model) {
   const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);
-  const systemMessage = "<|im_start|>system\n{'What can I help you?'}\n<|im_end|>"
+  const systemMessage = "<|im_start|>system\n I am assistant.\n<|im_end|>"
   messages.push({ sender: ip, text: conversation.text });
 
   const configuration = new Configuration({
@@ -172,7 +172,7 @@ async function azureOpenAiChatGPT(conversation, ip, model) {
 
 async function openAiChatGPT(message, model) {
   const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);
-  const systemMessage = "<|im_start|>system\n{'What can I help you?'}\n<|im_end|>"
+  const systemMessage = "<|im_start|>system\nI am assistant.\n<|im_end|>"
   messages.push({ sender: ip, text: prompt });
 
   const configuration = new Configuration({
