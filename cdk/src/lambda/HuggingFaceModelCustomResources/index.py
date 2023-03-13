@@ -25,10 +25,7 @@ try:
     if sagemaker_session_bucket is None and sess is not None:
         # set to default bucket if a bucket name is not given
         sagemaker_session_bucket = sess.default_bucket()
-    role = os.environ['sageMakerRoleArn']
     sess = sagemaker.Session(default_bucket=sagemaker_session_bucket)
-
-    print(f"sagemaker role arn: {role}")
     print(f"sagemaker bucket: {sess.default_bucket()}")
     print(f"sagemaker session region: {sess.boto_region_name}")
     pass
@@ -43,13 +40,15 @@ def handler(event, context):
 
 @helper.create
 def create(event, context):
+    props = event["ResourceProperties"]
+    print("create new resource with props %s" % props)
     logger.info("Got Create")
     # Hub Model configuration. <https://huggingface.co/models>
     hub = {
-        'HF_MODEL_ID': os.environ['hfModelId'],
-        'HF_TASK': os.environ['hfTask']
+        'HF_MODEL_ID': props['hfModelId'],
+        'HF_TASK': props['hfTask']
     }
-
+    role = props['sageMakerRoleArn']
     # create Hugging Face Model Class
     huggingface_model = HuggingFaceModel(
         env=hub,                      # configuration for loading model from Hub
@@ -61,7 +60,7 @@ def create(event, context):
 
     # Specify MemorySizeInMB and MaxConcurrency in the serverless config object
     serverless_config = ServerlessInferenceConfig(
-        memory_size_in_mb=int(os.environ["memorySizeInMb"]), max_concurrency=int(os.environ["maxConcurrency"]),
+        memory_size_in_mb=int(props["memorySizeInMb"]), max_concurrency=int(props["maxConcurrency"]),
     )
 
     # deploy the endpoint endpoint

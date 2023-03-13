@@ -50,14 +50,7 @@ export class HuggingFaceSagemakerServerlessInferenceConstruct extends Construct 
           "src",
           "lambda",
           "HuggingFaceModelCustomResources"
-        ), // required
-        environment: {
-          hfModelId: props.hfModelId,
-          hfTask: props.hfTask,
-          memorySizeInMb: "" + (props.memorySizeInMb || "4096"),
-          maxConcurrency: "" + (props.maxConcurrency || "5"),
-          sageMakerRoleArn: sageMakerRole.roleArn,
-        },
+        ), // required  
         timeout: Duration.minutes(15),
       }
     );
@@ -73,6 +66,13 @@ export class HuggingFaceSagemakerServerlessInferenceConstruct extends Construct 
         {
           serviceToken: customerResourceFunction.functionArn,
           removalPolicy: RemovalPolicy.DESTROY,
+          properties: {
+            hfModelId: props.hfModelId,
+            hfTask: props.hfTask,
+            memorySizeInMb: props.memorySizeInMb || "4096",
+            maxConcurrency: props.maxConcurrency || "5",    
+            sageMakerRoleArn: sageMakerRole.roleArn,        
+          },
         }
       );
     this.endpointName =
