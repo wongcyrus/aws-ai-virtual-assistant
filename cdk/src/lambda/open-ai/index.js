@@ -37,7 +37,7 @@ export async function handler(event) {
   let answer = "";
   if (process.env.basePath) {
     if (model === "gpt-35-tubo") {
-      answer = await azureOpenAiChatGPT(conversation, sourceIp, model);
+      answer = await azureOpenAiChatGPT(conversation, model);
     } else {
       const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
       answer = await azureOpenAi(message, model);
@@ -139,10 +139,10 @@ function createPrompt(system_message, messages) {
   return prompt;
 }
 
-async function azureOpenAiChatGPT(conversation, ip, model) {
+async function azureOpenAiChatGPT(conversation, model) {
   const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);
   const systemMessage = "<|im_start|>system\n I am assistant.\n<|im_end|>"
-  messages.push({ sender: ip, text: conversation.text });
+  messages.push({ sender: "user", text: conversation.text });
 
   const configuration = new Configuration({
     basePath: process.env.basePath + model,
@@ -173,7 +173,7 @@ async function azureOpenAiChatGPT(conversation, ip, model) {
 async function openAiChatGPT(message, model) {
   const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);
   const systemMessage = "<|im_start|>system\nI am assistant.\n<|im_end|>"
-  messages.push({ sender: ip, text: prompt });
+  messages.push({ sender: "user", text: prompt });
 
   const configuration = new Configuration({
     apiKey: process.env.apikey,

@@ -67,10 +67,10 @@ $().ready(() => {
         } = options;
         const [tokens = {}, idx = 0] = args;
         const cont = strEncode(tokens[idx].content || '');
-        const originResult = render.apply(this, args);       
+        const originResult = render.apply(this, args);
         const tpls = [
             '<br/>',
-            '<div class="m-mdic-copy-wrapper">',           
+            '<div class="m-mdic-copy-wrapper">',
             `<div class="u-mdic-copy-notify" style="display:none;">${successText}</div>`,
             '<button ',
             'class="u-mdic-copy-btn j-mdic-copy-btn" ',
@@ -901,6 +901,40 @@ $().ready(() => {
             });
 
         });
+
+        function csvToArrayOfObjects(csvString) {
+            const lines = csvString.trim().split('\n');
+            const headers = lines[0].replace(/["]/g, "").split(',');
+            const result = [];
+            for (let i = 1; i < lines.length; i++) {
+                const obj = {};
+                const currentLine = lines[i].split(',');
+
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = currentLine[j].replace(/["]/g, "");
+                }
+                result.push(obj);
+            }
+            return result.sort((p1, p2) => (p1.act > p2.act) ? 1 : 0);
+        }
+
+        const promptsSelect = $("#awesome-chatgpt-prompts");
+        fetch('https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv')
+            .then(response => response.text())
+            .then(csvData => {
+                const arrayOfObjects = csvToArrayOfObjects(csvData);
+                console.log(arrayOfObjects);
+                arrayOfObjects.map((item) => {
+                    promptsSelect.append(new Option(item.act, item.prompt));
+                });
+                promptsSelect.change(() => {
+                    msgerInput.value = promptsSelect.val();
+                });
+                promptsSelect.click(() => {
+                    msgerInput.value = promptsSelect.val();
+                });
+            });
+
 
 
     }

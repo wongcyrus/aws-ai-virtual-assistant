@@ -102,7 +102,7 @@ export class ChatApiConstruct extends Construct {
     problemTopic.grantPublish(huggingFaceFunction);
 
 
-    const aiRole = new Role(this, 'pollyRole', {
+    const aiRole = new Role(this, 'aiRole', {
       assumedBy: sessionTokenFunction.grantPrincipal,
       description: 'An IAM role for Amazon Polly',
       managedPolicies: [
@@ -131,7 +131,7 @@ export class ChatApiConstruct extends Construct {
       })
     );
 
-    sessionTokenFunction.addEnvironment("pollyRole", aiRole.roleArn);
+    sessionTokenFunction.addEnvironment("aiRole", aiRole.roleArn);
 
     const aiVirtualAssistantApi = new RestApi(this, 'aiVirtualAssistantApi',
       {

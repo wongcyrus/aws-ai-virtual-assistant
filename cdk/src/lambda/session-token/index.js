@@ -13,13 +13,38 @@ export async function handler(event) {
     // have access to.
     const command = new AssumeRoleCommand({
       // The Amazon Resource Name (ARN) of the role to assume.
-      RoleArn: process.env.pollyRole,
+      RoleArn: process.env.aiRole,
       // An identifier for the assumed role session.
-      RoleSessionName: "session",
+      RoleSessionName: "session-" + event.requestContext.identity.apiKeyId,
       // The duration, in seconds, of the role session. The value specified
       // can range from 900 seconds (15 minutes) up to the maximum session 
       // duration set for the role.
       DurationSeconds: 900,
+      Policy: JSON.stringify({
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "polly:DescribeVoices",
+              "polly:SynthesizeSpeech",
+              'transcribe:StartStreamTranscriptionWebSocket'
+            ],
+            "Resource": "*",
+          },
+          {
+            "Effect": "Deny",
+            "Action": "*",
+            "Resource": "*",
+            "Condition": {
+              "NotIpAddress": {
+                "aws:SourceIp": [
+                  event.requestContext.identity.sourceIp
+                ]
+              }
+            }
+          }]
+      })
     });
     const response = await client.send(command);
     console.log(response);
