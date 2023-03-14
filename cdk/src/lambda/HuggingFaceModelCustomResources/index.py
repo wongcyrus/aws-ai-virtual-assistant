@@ -40,6 +40,10 @@ def handler(event, context):
 
 @helper.create
 def create(event, context):
+    return _create(event, context)
+
+
+def _create(event, context):
     props = event["ResourceProperties"]
     print("create new resource with props %s" % props)
     logger.info("Got Create")
@@ -75,8 +79,13 @@ def create(event, context):
 
 @helper.delete
 def delete(event, context):
+    return _delete(event, context)
+
+
+def _delete(event, context):
     logger.info("Got Delete")
     physical_id = event["PhysicalResourceId"]
+    # event["PhysicalResourceId"]
     predictor = HuggingFacePredictor(
         endpoint_name=physical_id, sagemaker_session=sess)
     predictor.delete_model()
@@ -86,5 +95,5 @@ def delete(event, context):
 @helper.update
 def update(event, context):
     logger.info("Got Update")
-    delete(event, context)
-    return create(event, context)
+    # If the value returned is different, AWS CloudFormation recognizes the update as a replacement and sends a delete request to the old resource.    
+    return _create(event, context)

@@ -10,6 +10,7 @@ import {
   ManagedPolicy,
   PolicyStatement,
 } from "aws-cdk-lib/aws-iam";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export interface HuggingFaceSagemakerServerlessInferenceConstructProps {
   hfModelId: string;
@@ -52,6 +53,7 @@ export class HuggingFaceSagemakerServerlessInferenceConstruct extends Construct 
           "HuggingFaceModelCustomResources"
         ), // required  
         timeout: Duration.minutes(15),
+        logRetention: RetentionDays.ONE_MONTH,
       }
     );
     customerResourceFunction.role?.grantPassRole(sageMakerRole);
