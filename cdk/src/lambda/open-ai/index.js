@@ -36,14 +36,14 @@ export async function handler(event) {
 
   let answer = "";
   if (process.env.basePath) {
-    if (model === "gpt-35-tubo") {
+    if (model.startsWith("gpt-")) {
       answer = await azureOpenAiChatGPT(conversation, model);
     } else {
       const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
       answer = await azureOpenAi(message, model);
     }
   } else {
-    if (model === "gpt-35-tubo") {
+    if (model.startsWith("gpt-")) {
       answer = await openAiChatGPT(conversation, sourceIp, model);
     } else {
       const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
@@ -112,7 +112,7 @@ async function azureOpenAi(message, model) {
       top_p: 1.0,
       frequency_penalty: 0.0,
       presence_penalty: 0.0,
-      stop: stop
+      stop
     }, {
       headers: {
         'api-key': process.env.apikey,
@@ -127,43 +127,43 @@ async function azureOpenAi(message, model) {
 }
 
 function messageCombiner(a, b) {
-  return a.map((k, i) => ({ sender: k, text: b[i] }));
+  return a.map((k, i) => ({ role: k, content: b[i] }));
 }
 
 function createPrompt(system_message, messages) {
-  let prompt = system_message;
-  for (const message of messages) {
-    prompt += `\n<|im_start|>${message.sender}\n${message.text}\n<|im_end|>`;
-  }
-  prompt += "\n<|im_start|>assistant\n";
-  return prompt;
+  if (messages.length === 1)
+    messages.unshift(system_message);
+  return messages;
 }
 
 async function azureOpenAiChatGPT(conversation, model) {
   const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);
-  const systemMessage = "<|im_start|>system\n I am assistant.\n<|im_end|>"
-  messages.push({ sender: "user", text: conversation.text });
+  const systemMessage =  { role: "system", content: "You are a helpful assistant." };
+  messages.push({ role: "user", content: conversation.text });
 
+  console.log("messagesForOpenAi");
+  const messagesForOpenAi = createPrompt(systemMessage, messages);
+  console.log(messagesForOpenAi);
   const configuration = new Configuration({
-    basePath: process.env.basePath + model,
+    basePath: process.env.basePath + model +"/chat",
   });
   const openai = new OpenAIApi(configuration);
   try {
     const completion = await openai.createCompletion({
-      prompt: createPrompt(systemMessage, messages),
+      messages: messagesForOpenAi,
       max_tokens: 800,
       temperature: 0.7,
       frequency_penalty: 0,
       presence_penalty: 0,
       top_p: 0.95,
-      stop: ["<|im_end|>"]
+      stop: null
     }, {
       headers: {
         'api-key': process.env.apikey,
       },
-      params: { "api-version": "2022-12-01" }
+      params: { "api-version": "2023-03-15-preview" }
     });
-    return completion.data.choices[0].text;
+    return completion.data.choices[0].message.content;
   } catch (e) {
     console.error(e);
     return "";
