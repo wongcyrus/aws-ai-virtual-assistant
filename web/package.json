@@ -11,8 +11,8 @@
     "test": "exit 0"
   },
   "dependencies": {    
-    "@aws-sdk/client-transcribe-streaming": "^3.321.1",  
-    "@aws-sdk/credential-providers": "^3.321.1",
+    "@aws-sdk/client-transcribe-streaming": "^3.328.0",  
+    "@aws-sdk/credential-providers": "^3.328.0",
     "buffer": "^6.0.3",
     "get-user-media-promise": "^1.1.4",
     "microphone-stream": "^6.0.1",
@@ -21,8 +21,8 @@
     "workbox-webpack-plugin": "^6.5.4"
   },
   "devDependencies": {
-    "webpack": "^5.81.0",
-    "webpack-cli": "^5.0.2"
+    "webpack": "^5.82.0",
+    "webpack-cli": "^5.1.0"
   },
   "type": "module"
 }

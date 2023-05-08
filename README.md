@@ -39,7 +39,6 @@ Note down the output.
 
 
 # For web development
-
 Build the site, after modifying JavaScript or CSS.
 ```
 cd web/src/
