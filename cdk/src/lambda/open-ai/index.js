@@ -126,31 +126,34 @@ async function azureOpenAi(message, model) {
   }
 }
 
-function messageCombiner(a, b) {
-  return a.map((k, i) => ({ role: k, content: b[i] }));
+function messageCombiner(past_user_inputs, generated_responses) {
+  const systemMessage =  { role: "system", content: "You are a helpful assistant call AI." };
+  let messages= [systemMessage];
+  for(let i = 0; i < past_user_inputs.length; i++) {
+    messages.push({role: "user", content: past_user_inputs[i]});
+    messages.push({role: "assistant", content: generated_responses[i]});
+  }
+  return messages;
 }
 
 function createPrompt(system_message, messages) {
-  if (messages.length === 1)
-    messages.unshift(system_message);
+  messages.unshift(system_message);
   return messages;
 }
 
 async function azureOpenAiChatGPT(conversation, model) {
-  const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);
-  const systemMessage =  { role: "system", content: "You are a helpful assistant." };
+  const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);  
   messages.push({ role: "user", content: conversation.text });
 
   console.log("messagesForOpenAi");
-  const messagesForOpenAi = createPrompt(systemMessage, messages);
-  console.log(messagesForOpenAi);
+  console.log(messages);
   const configuration = new Configuration({
     basePath: process.env.basePath + model +"/chat",
   });
   const openai = new OpenAIApi(configuration);
   try {
     const completion = await openai.createCompletion({
-      messages: messagesForOpenAi,
+      messages: messages,
       max_tokens: 800,
       temperature: 0.7,
       frequency_penalty: 0,
@@ -173,7 +176,7 @@ async function azureOpenAiChatGPT(conversation, model) {
 async function openAiChatGPT(message, model) {
   const messages = messageCombiner(conversation.past_user_inputs, conversation.generated_responses);
   const systemMessage = "<|im_start|>system\nI am assistant.\n<|im_end|>"
-  messages.push({ sender: "user", text: prompt });
+  messages.push({ sender: "user", text: message });
 
   const configuration = new Configuration({
     apiKey: process.env.apikey,
@@ -181,6 +184,7 @@ async function openAiChatGPT(message, model) {
   const openai = new OpenAIApi(configuration);
   try {
     const completion = await openai.createCompletion({
+      model: model,
       prompt: createPrompt(systemMessage, messages),
       max_tokens: 800,
       temperature: 0.7,
