@@ -14,18 +14,14 @@ Voice chat in VR mode
 # Configuration 
 Rename ```.env.template``` to ```.env```
 ```
-AZURE_OPENAI_BASE_PATH="https://<XXXX>.openai.azure.com/openai/deployments/"
-OPENAI_APIKEY="API_KEY"
 MAX_TOKENS=500
 QUOTA=100
 UNLIMIT_KEY=
 PROBLEM_EMAIL=
 ```
-1. Using Azure OpenAI, you need to provide AZURE_OPENAI_BASE_PATH.
-2. Using standard OpenAI, you need to leave AZURE_OPENAI_BASE_PATH blank.
-3. Need a unlimited key for demo or preview, you need to provide UNLIMIT_KEY.
-4. Provide PROBLEM_EMAIL to get email alert when there is any very negative message from user.
-5. QUOTA is the daily limit.
+1. Need a unlimited key for demo or preview, you need to provide UNLIMIT_KEY.
+2. Provide PROBLEM_EMAIL to get email alert when there is any very negative message from user.
+3. QUOTA is the daily limit.
 
 
 # Deployment with CodeSpaces

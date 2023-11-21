@@ -1,5 +1,5 @@
 {
-  "name": "openai",
+  "name": "bedrock",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.1379.0",
-    "openai": "^3.2.1"
+    "@aws-sdk/client-bedrock-runtime": "^3.454.0",
+    "aws-sdk": "^2.1500.0"    
   }
 }

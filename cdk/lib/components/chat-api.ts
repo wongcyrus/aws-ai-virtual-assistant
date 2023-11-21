@@ -1,14 +1,9 @@
 
-
-
 import { CfnOutput, Duration } from "aws-cdk-lib";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from 'constructs';
 import path = require("path");
 import { Cors, LambdaIntegration, Period, RestApi } from "aws-cdk-lib/aws-apigateway";
-import { PythonFunction } from "@aws-cdk/aws-lambda-python-alpha";
-import { Runtime } from "@aws-cdk/aws-lambda";
-import { HuggingFaceSagemakerServerlessInferenceConstruct } from "./hugging-face-sagemaker-serverless-inference";
 import { Bucket } from "aws-cdk-lib/aws-s3";
 import { Effect, ManagedPolicy, PolicyDocument, PolicyStatement, Role } from "aws-cdk-lib/aws-iam";
 import { Topic } from "aws-cdk-lib/aws-sns";
@@ -34,19 +29,17 @@ export class ChatApiConstruct extends Construct {
       problemTopic.addSubscription(new EmailSubscription(process.env.PROBLEM_EMAIL));
     }
 
-    const openAiFunction = new NodejsFunction(this, "openAiFunction", {
-      description: "OpenAI Lambda Function",
-      entry: path.join(__dirname, "/../../src/lambda/open-ai/index.js"),
+    const bedrockFunction = new NodejsFunction(this, "bedrockFunction", {
+      description: "Bedrock Lambda Function",
+      entry: path.join(__dirname, "/../../src/lambda/bedrock/index.js"),
       handler: "handler",
       timeout: Duration.seconds(30),
       environment: {
-        basePath: process.env.AZURE_OPENAI_BASE_PATH!,
-        apikey: process.env.OPENAI_APIKEY!,
         maxTokens: process.env.MAX_TOKENS!,
         conversationBucket: props.conversationBucket.bucketName,
         problemTopicArn: problemTopic.topicArn,
       },
-      depsLockFilePath: path.join(__dirname, "/../../src/lambda/open-ai/package-lock.json"),
+      depsLockFilePath: path.join(__dirname, "/../../src/lambda/bedrock/package-lock.json"),
       bundling: {
         externalModules: [
           'aws-sdk', // Use the 'aws-sdk' available in the Lambda runtime          
@@ -54,10 +47,13 @@ export class ChatApiConstruct extends Construct {
       },
       logRetention: RetentionDays.ONE_MONTH,
     });
-    openAiFunction.role!.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('ComprehendReadOnly'));
-    props.conversationBucket.grantWrite(openAiFunction);
-    problemTopic.grantPublish(openAiFunction);
-
+    bedrockFunction.role!.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('ComprehendReadOnly'));
+    bedrockFunction.role?.addToPrincipalPolicy(new PolicyStatement({
+      resources: ["*"],
+      actions: ['bedrock:InvokeModel'],
+    }));
+    props.conversationBucket.grantWrite(bedrockFunction);
+    problemTopic.grantPublish(bedrockFunction);
 
     const sessionTokenFunction = new NodejsFunction(this, "sessionTokenFunction", {
       description: "Session Token Lambda Function",
@@ -72,35 +68,6 @@ export class ChatApiConstruct extends Construct {
       },
       logRetention: RetentionDays.ONE_MONTH,
     });
-
-
-    const hfConstruct = new HuggingFaceSagemakerServerlessInferenceConstruct(
-      this,
-      "huggingFaceSagemakerServerlessInferenceConstruct",
-      {
-        hfModelId: "facebook/blenderbot-400M-distill",
-        hfTask: "conversational",
-        memorySizeInMb: 3072,
-      }
-    );
-    const huggingFaceFunction = new PythonFunction(this, 'huggingFaceFunction', {
-      description: "Hugging Face Lambda Function",
-      entry: path.join(__dirname, "/../../src/lambda/huggingface"),
-      runtime: Runtime.PYTHON_3_9, // required
-      memorySize: 512,
-      timeout: Duration.seconds(60),
-      environment: {
-        huggingFaceodelEndpointName: hfConstruct.endpointName,
-        conversationBucket: props.conversationBucket.bucketName,
-        problemTopicArn: problemTopic.topicArn,
-      },
-      initialPolicy: [hfConstruct.invokeEndPointPolicyStatement],
-      logRetention: RetentionDays.ONE_MONTH,
-    });
-    huggingFaceFunction.role!.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('ComprehendReadOnly'));
-    props.conversationBucket.grantWrite(huggingFaceFunction);
-    problemTopic.grantPublish(huggingFaceFunction);
-
 
     const aiRole = new Role(this, 'aiRole', {
       assumedBy: sessionTokenFunction.grantPrincipal,
@@ -140,19 +107,15 @@ export class ChatApiConstruct extends Construct {
         },
       });
 
-    const openAiLambdaIntegration = new LambdaIntegration(openAiFunction);
+    const bedrockLambdaIntegration = new LambdaIntegration(bedrockFunction);
     const sessionTokenLambdaIntegration = new LambdaIntegration(sessionTokenFunction);
-    const huggingFaceLambdaIntegration = new LambdaIntegration(huggingFaceFunction);
 
     const v1 = aiVirtualAssistantApi.root.addResource('v1');
     v1.addResource('session-token').addMethod('GET', sessionTokenLambdaIntegration, { apiKeyRequired: true });
-    const azureResource = v1.addResource('open-ai');
-    azureResource.addMethod('POST', openAiLambdaIntegration, { apiKeyRequired: true });
-    const huggingFaceResource = v1.addResource('huggingFace');
-    huggingFaceResource.addMethod('POST', huggingFaceLambdaIntegration, { apiKeyRequired: true });
+    const bedrockResource = v1.addResource('bedrock');
+    bedrockResource.addMethod('POST', bedrockLambdaIntegration, { apiKeyRequired: true });
 
     const prod = aiVirtualAssistantApi.deploymentStage;
-
     this.endpoint = aiVirtualAssistantApi.url + "v1/";
 
     const plan = aiVirtualAssistantApi.addUsagePlan('UsagePlan', {
