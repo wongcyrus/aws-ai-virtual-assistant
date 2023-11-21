@@ -75,6 +75,7 @@ index.html is the front-end HTML code for a tutorial demonstrating how to stream
                     <button type="submit" class="msger-send-btn"
                         id="sendButton">Send</button>
                 </form>
+            <!--
                 <select id="inputLanguageList">
                     <option value="nan">Select the language you are going to
                         speak</option>
@@ -118,8 +119,10 @@ index.html is the front-end HTML code for a tutorial demonstrating how to stream
                     <option value="tr-TR">Turkish</option>
                     <option value="vi-VN">Vietnamese</option>
                 </select>
+              
                 <button id="record" class="recordInactive"
                     onclick="onRecordPress()">Voice ◉</button>
+            -->
             </section>
             <div class="msger">
                 <div style="padding: 10px;">
@@ -143,8 +146,10 @@ index.html is the front-end HTML code for a tutorial demonstrating how to stream
                     <label for="models">Choose a model:</label>
                     <select name="models" id="models">
                         <option value="ai21.j2-mid-v1" selected>ai21.j2-mid-v1</option>
-                        <option value="ai21.j2-ultra-v1">ai21.j2-ultra-v1</option>                      
+                        <option value="ai21.j2-ultra-v1">ai21.j2-ultra-v1</option>
+                        <option value="meta.llama2-13b-chat-v1">meta.llama2-13b-chat-v1</option>
                     </select>
+                    <br />
                     <label for="awesome-chatgpt-prompts">Act as:</label>
                     <select name="awesome-chatgpt-prompts"
                         id="awesome-chatgpt-prompts">

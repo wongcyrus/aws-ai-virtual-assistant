@@ -31,12 +31,13 @@ function formatDate(date) {
 }
 
 export async function handler(event) {
+  const stop = "\n\n\n\n\n";
   const conversation = JSON.parse(event.body);
   const model = conversation.model;
   const question = conversation.text;
   const sourceIp = event.requestContext.identity.sourceIp;
 
-  let answer = await bedrockChat(conversation, model);  
+  const answer = await bedrockChat(conversation);  
   console.log(answer);
   const resp = await comprehend
     .detectDominantLanguage({ Text: question })
@@ -116,30 +117,63 @@ export async function handler(event) {
   };
 }
 
-async function bedrockChat(message, model) {
+async function bedrockChat(conversation) {
+  const model = conversation.model;
+  const question = conversation.text;
+  
   const bedrockClient = new BedrockRuntimeClient({
     region: process.env.region
   });
-  const command = new InvokeModelCommand({
-    modelId: model,
-    contentType: "application/json",
-    accept: "application/json",
-    body: JSON.stringify({
-      prompt: message,
-      maxTokens: 200,
-      temperature: 0.7,
-      topP: 1,
-      stopSequences: [],
-      countPenalty: { scale: 0 },
-      presencePenalty: { scale: 0 },
-      frequencyPenalty: { scale: 0 }
-    })
-  });
-  const response = await bedrockClient.send(command);
-  // Save the raw response
-  const rawRes = response.body;
-  // Convert it to a JSON String
-  const jsonString = new TextDecoder().decode(rawRes);
-  const parsedResponse = JSON.parse(jsonString);
-  return parsedResponse.completions[0].data.text;
+  if(model === "ai21.j2-mid-v1" || model === "ai21.j2-ultra-v1")
+  {
+    const stop = "<|stop|>";
+    const combiner = (a, b) => a.map((k, i) => "User: "+ k + stop + "Bot: "+b[i] + stop);
+    const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
+    const command = new InvokeModelCommand({
+      modelId: model,
+      contentType: "application/json",
+      accept: "*/*",
+      body: JSON.stringify({
+        prompt: message,
+        maxTokens: 200,
+        temperature: 0.7,
+        topP: 1,
+        stopSequences: [stop],
+        countPenalty: { scale: 0 },
+        presencePenalty: { scale: 0 },
+        frequencyPenalty: { scale: 0 }
+      })
+    });
+    const response = await bedrockClient.send(command);
+    // Save the raw response
+    const rawRes = response.body;
+    // Convert it to a JSON String
+    const jsonString = new TextDecoder().decode(rawRes);
+    const parsedResponse = JSON.parse(jsonString);
+    return parsedResponse.completions[0].data.text;
+  }else if(model === "meta.llama2-13b-chat-v1"){
+    const combiner = (a, b) => a.map((k, i) => k + stop + b[i] + stop);
+    const stop = "\n";
+    const message = combiner(conversation.past_user_inputs, conversation.generated_responses).join(stop) + stop + question;
+    const command = new InvokeModelCommand({
+      modelId: model,
+      contentType: "application/json",
+      accept: "*/*",
+      body: JSON.stringify({
+        prompt: message,
+        max_gen_len: 256,
+        temperature: 0.3,
+        top_p: 1
+      })
+    });
+    const response = await bedrockClient.send(command);
+    // Save the raw response
+    const rawRes = response.body;
+    // Convert it to a JSON String
+    const jsonString = new TextDecoder().decode(rawRes);
+    console.log(jsonString);
+    const parsedResponse = JSON.parse(jsonString);
+    return parsedResponse.generation;
+  }
+
 }

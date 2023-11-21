@@ -88,7 +88,6 @@ export class ChatApiConstruct extends Construct {
           ],
         })
       }
-
     });
 
     sessionTokenFunction.role!.addToPrincipalPolicy(

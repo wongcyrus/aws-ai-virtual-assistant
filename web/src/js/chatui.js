@@ -145,10 +145,6 @@ $().ready(() => {
     function appendMessage(name, img, side, text) {
         //   Simple solution for small apps
         let message = HTMLEncode(text);
-        const displayMode = $("#models").find(':selected').val().split(",")[2];
-        if (side == "left" && displayMode == "code") {
-            message = `<div class='markdown-body'>${md.render(text)}</div>`;
-        }
         const msgHTML = `
         <div class="msg ${side}-msg">
           <div class="msg-img" style="background-image: url(${img})"></div>    
@@ -860,7 +856,7 @@ $().ready(() => {
 
             const messages = conversations.get(name);
             const data = {
-                "model": $("#models").find(':selected').val().split(",")[1],
+                "model": $("#models").find(':selected').val(),
                 "past_user_inputs": [...messages.past_user_inputs],
                 "generated_responses": [...messages.generated_responses],
                 "text": msgText
@@ -868,7 +864,7 @@ $().ready(() => {
             messages.past_user_inputs.push(msgText);
 
             $.ajax({
-                url: endpoint + $("#models").find(':selected').val().split(",")[0],
+                url: endpoint + "bedrock/",
                 contentType: 'application/json',
                 type: "POST",
                 dataType: 'json',
